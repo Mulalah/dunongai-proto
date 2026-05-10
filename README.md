@@ -54,12 +54,6 @@ Total demo time: 4–6 minutes.
 - Recharts (teacher trend chart)
 - Google Fonts: Plus Jakarta Sans + Inter + Lora
 
-## Get an Anthropic API Key
-
-1. Go to https://console.anthropic.com
-2. Click **API Keys** → **Create Key**
-3. New accounts get $5 free credits
-4. Paste into `.env` as `VITE_CLAUDE_API_KEY=sk-ant-...`
 
 ## Set Up Firebase (optional)
 
