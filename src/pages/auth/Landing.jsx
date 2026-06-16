@@ -46,6 +46,22 @@ export default function Landing() {
           >
             Mag-login bilang Guro
           </button>
+
+          <div className="mt-2 flex items-center justify-center gap-2 text-sm text-white/60">
+            <span>Bago dito?</span>
+            <button
+              onClick={() => navigate('/signup/student')}
+              className="text-gold font-semibold hover:underline"
+            >
+              Gumawa ng account
+            </button>
+          </div>
+          <button
+            onClick={() => navigate('/signup/parent')}
+            className="text-xs text-white/50 hover:text-white/80 transition"
+          >
+            Magulang? Subaybayan ang anak →
+          </button>
         </div>
       </div>
 

@@ -101,6 +101,17 @@ export default function StudentLogin() {
             <div className="text-center text-xs text-slate-400 bg-slate-50 rounded-lg py-2 border border-slate-100">
               Para sa demo: <span className="font-mono">student@dunongai.ph / dunong123</span>
             </div>
+
+            <div className="text-center text-sm text-slate-500">
+              Wala pang account?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/signup/student')}
+                className="text-teal font-semibold hover:underline"
+              >
+                Gumawa ng account
+              </button>
+            </div>
           </form>
         </div>
       </div>

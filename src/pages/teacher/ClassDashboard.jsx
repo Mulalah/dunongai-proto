@@ -7,6 +7,7 @@ import StudentRow from '../../components/teacher/StudentRow';
 import { useAuth } from '../../context/AuthContext';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where } from '../../firebase';
 import { SEED_CLASS_STUDENTS } from '../../utils/seedData';
+import { getSectionsForTeacher, createSection } from '../../utils/sections';
 
 const TABS = [
   { id: 'all', label: 'Lahat' },
@@ -24,6 +25,36 @@ export default function ClassDashboard() {
   const [sortKey, setSortKey] = useState('status');
   const [sortDir, setSortDir] = useState('asc');
 
+  const teacherId = profile?.uid || 'demo-teacher-001';
+  const [sections, setSections] = useState([]);
+  const [activeSectionId, setActiveSectionId] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const activeSection = sections.find((s) => s.id === activeSectionId) || null;
+
+  // Load this teacher's sections; restore last-selected from localStorage.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await getSectionsForTeacher(teacherId);
+        if (cancelled) return;
+        setSections(list);
+        const saved = localStorage.getItem(`dunong_active_section_${teacherId}`);
+        const initial = list.find((s) => s.id === saved) || list[0];
+        if (initial) setActiveSectionId(initial.id);
+      } catch {
+        if (!cancelled) setSections([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [teacherId]);
+
+  // Load students for the active section.
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -33,12 +64,10 @@ export default function ClassDashboard() {
         return;
       }
       try {
-        const snap = await getDocs(
-          query(
-            collection(db, 'users'),
-            where('teacherId', '==', profile?.uid || 'demo-teacher-001')
-          )
-        );
+        const constraints = activeSectionId
+          ? where('sectionId', '==', activeSectionId)
+          : where('teacherId', '==', teacherId);
+        const snap = await getDocs(query(collection(db, 'users'), constraints));
         const arr = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
         if (!cancelled) setStudents(arr.length ? arr : seedFallback());
       } catch {
@@ -51,7 +80,30 @@ export default function ClassDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [profile?.uid]);
+  }, [teacherId, activeSectionId]);
+
+  function switchSection(id) {
+    setActiveSectionId(id);
+    localStorage.setItem(`dunong_active_section_${teacherId}`, id);
+  }
+
+  async function handleCreateSection(e) {
+    e.preventDefault();
+    const name = newName.trim();
+    if (!name) return;
+    const section = await createSection(teacherId, name);
+    setSections((prev) => [...prev, section]);
+    switchSection(section.id);
+    setNewName('');
+    setCreating(false);
+  }
+
+  function copyCode() {
+    if (!activeSection?.code) return;
+    navigator.clipboard?.writeText(activeSection.code).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
 
   function seedFallback() {
     return SEED_CLASS_STUDENTS.map((s) => ({
@@ -118,6 +170,74 @@ export default function ClassDashboard() {
         subtitle={profile?.displayName || "Ma'am Ana Reyes"}
       />
       <div className="p-8 page-enter">
+        {/* Section bar */}
+        <div className="mb-6 bg-white rounded-2xl shadow-card p-4 flex flex-wrap items-center gap-3">
+          <span className="text-[11px] uppercase tracking-wide text-slate-500 font-bold">Section</span>
+
+          {sections.length > 0 ? (
+            <select
+              value={activeSectionId}
+              onChange={(e) => switchSection(e.target.value)}
+              className="h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 font-heading font-semibold text-navy text-sm focus:border-teal focus:outline-none"
+            >
+              {sections.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="text-sm text-slate-400">Wala pang section.</span>
+          )}
+
+          {activeSection && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Join code:</span>
+              <button
+                onClick={copyCode}
+                title="I-kopya"
+                className="font-mono font-bold tracking-widest text-teal bg-teal/10 px-3 py-1.5 rounded-lg hover:bg-teal/20 transition"
+              >
+                {activeSection.code} {copied ? '✓' : '⧉'}
+              </button>
+            </div>
+          )}
+
+          <div className="ml-auto">
+            {creating ? (
+              <form onSubmit={handleCreateSection} className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Pangalan ng section"
+                  className="h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-teal focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="h-10 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-600 text-white text-sm font-heading font-bold btn-press"
+                >
+                  Gawin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setCreating(false); setNewName(''); }}
+                  className="h-10 px-3 rounded-xl text-slate-500 text-sm hover:bg-slate-100"
+                >
+                  Kanselahin
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setCreating(true)}
+                className="h-10 px-4 rounded-xl border-2 border-teal/40 text-teal text-sm font-heading font-bold hover:bg-teal/5 transition btn-press"
+              >
+                + Bagong Section
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
           <StatCard

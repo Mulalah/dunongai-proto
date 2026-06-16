@@ -88,6 +88,17 @@ export default function TeacherLogin() {
           <div className="text-center text-[11px] text-white/50 bg-white/5 border border-white/10 rounded-lg py-2 mt-2">
             Para sa demo: <span className="font-mono text-gold">teacher@dunongai.ph / dunong123</span>
           </div>
+
+          <div className="text-center text-sm text-white/60">
+            Wala pang account?{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/signup/teacher')}
+              className="text-gold font-semibold hover:underline"
+            >
+              Gumawa ng account
+            </button>
+          </div>
         </form>
       </div>
     </div>

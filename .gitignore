@@ -12,6 +12,7 @@ dist-ssr/
 
 # Editor / OS files
 .vscode/
+.claude/
 .DS_Store
 Thumbs.db
 

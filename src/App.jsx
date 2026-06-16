@@ -7,6 +7,7 @@ import { seedDatabase } from './utils/seedData';
 import Landing from './pages/auth/Landing';
 import StudentLogin from './pages/auth/StudentLogin';
 import TeacherLogin from './pages/auth/TeacherLogin';
+import Signup from './pages/auth/Signup';
 
 import DiagnosticQuiz from './pages/student/DiagnosticQuiz';
 import LevelAssigned from './pages/student/LevelAssigned';
@@ -19,6 +20,8 @@ import Progress from './pages/student/Progress';
 import ClassDashboard from './pages/teacher/ClassDashboard';
 import StudentProfile from './pages/teacher/StudentProfile';
 import FlaggedStudents from './pages/teacher/FlaggedStudents';
+
+import ParentDashboard from './pages/parent/ParentDashboard';
 
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
@@ -42,12 +45,13 @@ function ProtectedRoute({ role, children }) {
     );
   }
   if (role && profile.role !== role) {
-    return (
-      <Navigate
-        to={profile.role === 'teacher' ? '/teacher/dashboard' : '/student/library'}
-        replace
-      />
-    );
+    const home =
+      profile.role === 'teacher'
+        ? '/teacher/dashboard'
+        : profile.role === 'parent'
+        ? '/parent/dashboard'
+        : '/student/library';
+    return <Navigate to={home} replace />;
   }
   return children;
 }
@@ -64,6 +68,7 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/login/student" element={<StudentLogin />} />
         <Route path="/login/teacher" element={<TeacherLogin />} />
+        <Route path="/signup/:role" element={<Signup />} />
 
         <Route
           path="/student/quiz"
@@ -143,6 +148,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute role="teacher">
               <FlaggedStudents />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/parent/dashboard"
+          element={
+            <ProtectedRoute role="parent">
+              <ParentDashboard />
             </ProtectedRoute>
           }
         />

@@ -7,6 +7,7 @@ import Badge from '../../components/ui/Badge';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where } from '../../firebase';
 import { SEED_STORIES } from '../../utils/seedData';
 import { useAuth } from '../../context/AuthContext';
+import { joinSection } from '../../utils/sections';
 
 const FILTERS = [
   'ALL',
@@ -22,12 +23,32 @@ const FILTERS = [
 
 export default function StoryLibrary() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, updateProfile } = useAuth();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('ALL');
   const [completedMap, setCompletedMap] = useState({});
+  const [joinCode, setJoinCode] = useState('');
+  const [joinMsg, setJoinMsg] = useState(null); // { ok, text }
+  const [joining, setJoining] = useState(false);
+
+  async function handleJoinSection(e) {
+    e.preventDefault();
+    if (!joinCode.trim()) return;
+    setJoining(true);
+    setJoinMsg(null);
+    try {
+      const section = await joinSection(profile?.uid, joinCode);
+      updateProfile({ sectionId: section.id, teacherId: section.teacherId });
+      setJoinMsg({ ok: true, text: `Sumali ka na sa "${section.name}"! 🎉` });
+      setJoinCode('');
+    } catch (err) {
+      setJoinMsg({ ok: false, text: err.message || 'Hindi makasali sa section.' });
+    } finally {
+      setJoining(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +133,33 @@ export default function StoryLibrary() {
       />
 
       <div className="p-8 page-enter">
+        {/* Join a section */}
+        <div className="mb-5 bg-white rounded-2xl shadow-card p-4 flex flex-wrap items-center gap-3">
+          <span className="text-sm text-navy font-heading font-semibold">
+            {profile?.sectionId ? 'Sumali sa ibang section?' : 'May section code mula sa iyong guro?'}
+          </span>
+          <form onSubmit={handleJoinSection} className="flex items-center gap-2">
+            <input
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="SECTION CODE"
+              className="h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono tracking-widest focus:border-teal focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={joining}
+              className="h-10 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-600 text-white text-sm font-heading font-bold btn-press disabled:opacity-60"
+            >
+              {joining ? '…' : 'Sumali'}
+            </button>
+          </form>
+          {joinMsg && (
+            <span className={`text-sm ${joinMsg.ok ? 'text-emerald-600' : 'text-red-600'}`}>
+              {joinMsg.text}
+            </span>
+          )}
+        </div>
+
         {/* Search */}
         <div className="relative">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔎</span>

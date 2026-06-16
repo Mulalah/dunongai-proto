@@ -1,6 +1,6 @@
-const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY || '';
-const DEMO_MODE = !CLAUDE_API_KEY;
-const MODEL = 'claude-haiku-4-5';
+// Live AI runs through the serverless proxy at /api/claude (key stays server-side).
+// Toggle with VITE_AI_ENABLED=true; otherwise the app uses curated demo fallbacks.
+const DEMO_MODE = import.meta.env.VITE_AI_ENABLED !== 'true';
 
 export const isDemoMode = () => DEMO_MODE;
 
@@ -54,25 +54,23 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function callClaude(systemPrompt, userMessage, maxTokens = 1024) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+async function callProxy({ system, messages, max_tokens = 1024 }) {
+  const response = await fetch('/api/claude', {
     method: 'POST',
-    headers: {
-      'x-api-key': CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: maxTokens,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }]
-    })
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ system, messages, max_tokens })
   });
   if (!response.ok) throw new Error('Claude API error: ' + response.status);
   const data = await response.json();
   return data.content?.[0]?.text || '';
+}
+
+async function callClaude(systemPrompt, userMessage, maxTokens = 1024) {
+  return callProxy({
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userMessage }],
+    max_tokens: maxTokens
+  });
 }
 
 function tryParseJSON(text) {
@@ -207,24 +205,12 @@ export async function basaBotChat(message, storyContext, history = []) {
       ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
       { role: 'user', content: message }
     ];
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 400,
-        system: `You are Basa Bot — a friendly reading buddy for Filipino kids in Grades K-6. Reply in warm, simple Filipino (or mixed English) under 3 sentences. Use emojis sparingly. Story context: ${storyContext}`,
-        messages
-      })
+    const text = await callProxy({
+      system: `You are Basa Bot — a friendly reading buddy for Filipino kids in Grades K-6. Reply in warm, simple Filipino (or mixed English) under 3 sentences. Use emojis sparingly. Story context: ${storyContext}`,
+      messages,
+      max_tokens: 400
     });
-    if (!response.ok) throw new Error('Claude API error');
-    const data = await response.json();
-    return data.content?.[0]?.text || FALLBACKS.basaBot;
+    return text || FALLBACKS.basaBot;
   } catch (e) {
     console.warn('basaBotChat fallback:', e);
     return FALLBACKS.basaBot;

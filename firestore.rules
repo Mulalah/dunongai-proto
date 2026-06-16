@@ -1,0 +1,61 @@
+rules_version = '2';
+
+// DunongAI Firestore security rules.
+// Paste into Firebase Console → Firestore Database → Rules → Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function userData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+    function isTeacher() {
+      return isSignedIn() && userData(request.auth.uid).role == 'teacher';
+    }
+
+    // Stories are public read; only signed-in teachers may write/seed them.
+    match /stories/{storyId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    // A user can read/write their own profile.
+    // Teachers can read students in their sections; parents read their linked child.
+    match /users/{uid} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == uid ||
+        resource.data.teacherId == request.auth.uid ||
+        userData(request.auth.uid).childId == uid ||
+        isTeacher()
+      );
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow update, delete: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Reading progress: owner read/write; teachers and the linked parent may read.
+    match /progress/{uid} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == uid ||
+        userData(request.auth.uid).childId == uid ||
+        isTeacher()
+      );
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Sessions: a student writes their own; teachers/parents read.
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.studentId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.studentId == request.auth.uid;
+    }
+
+    // Sections: teachers own theirs; any signed-in user may read to join by code.
+    match /sections/{sectionId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() && request.resource.data.teacherId == request.auth.uid;
+      allow update, delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
+    }
+  }
+}

@@ -6,6 +6,7 @@ import Badge from '../../components/ui/Badge';
 import { db, FIREBASE_ENABLED, doc, getDoc } from '../../firebase';
 import { SEED_STORIES } from '../../utils/seedData';
 import { formatTime } from '../../utils/levelUtils';
+import useSpeech from '../../utils/useSpeech';
 
 function renderStory(text, tapWords, onTap) {
   if (!text) return null;
@@ -50,6 +51,7 @@ export default function StoryReader() {
   const [loading, setLoading] = useState(true);
   const [seconds, setSeconds] = useState(0);
   const botRef = useRef(null);
+  const { supported: ttsSupported, speaking, paused, speak, pause, stop } = useSpeech();
 
   useEffect(() => {
     let cancelled = false;
@@ -84,6 +86,7 @@ export default function StoryReader() {
   }
 
   function finish() {
+    stop();
     sessionStorage.setItem(
       'reading_session',
       JSON.stringify({
@@ -138,6 +141,34 @@ export default function StoryReader() {
                     <span className="text-xs text-slate-400 italic">— {story.author}</span>
                   </div>
                   <div className="mt-2 h-1 w-10 rounded bg-gold" />
+
+                  {ttsSupported && (
+                    <div className="mt-5 flex items-center gap-2">
+                      {!speaking ? (
+                        <button
+                          onClick={() => speak(story.text)}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal/10 text-teal font-heading font-semibold text-sm hover:bg-teal/20 transition btn-press"
+                        >
+                          🔊 Pakinggan
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={pause}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal/10 text-teal font-heading font-semibold text-sm hover:bg-teal/20 transition btn-press"
+                          >
+                            {paused ? '▶️ Ituloy' : '⏸ I-pause'}
+                          </button>
+                          <button
+                            onClick={stop}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-500 font-heading font-semibold text-sm hover:bg-slate-200 transition btn-press"
+                          >
+                            ⏹ Itigil
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   <div className="reading-text mt-8">
                     {renderStory(story.text, story.tapWords, handleTapWord)}
