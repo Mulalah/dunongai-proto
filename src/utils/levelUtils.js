@@ -36,6 +36,18 @@ export function formatTime(seconds) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+// Decide which badges are unlocked from real progress data.
+export function computeUnlockedBadges({ sessions = [], currentLevel = 1, streakDays = 0 } = {}) {
+  const ids = [];
+  if (sessions.length >= 1) ids.push('first-story');
+  if (streakDays >= 3) ids.push('streak-3');
+  if (streakDays >= 7) ids.push('streak-7');
+  if (currentLevel >= 3) ids.push('level-3');
+  if (currentLevel >= 5) ids.push('level-5');
+  if (sessions.some((s) => (s.score || 0) >= 100)) ids.push('perfect-score');
+  return ids;
+}
+
 export const BADGES = [
   {
     badgeId: 'first-story',

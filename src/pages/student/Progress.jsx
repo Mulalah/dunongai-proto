@@ -4,21 +4,29 @@ import TopBar from '../../components/layout/TopBar';
 import BadgeCard from '../../components/student/BadgeCard';
 import LeaderboardRow from '../../components/student/LeaderboardRow';
 import { useAuth } from '../../context/AuthContext';
-import { BADGES, LEVEL_NAMES } from '../../utils/levelUtils';
+import { BADGES, LEVEL_NAMES, computeUnlockedBadges } from '../../utils/levelUtils';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where, orderBy, limit } from '../../firebase';
 import { SEED_CLASS_STUDENTS } from '../../utils/seedData';
+
+// Sample sessions so demo mode shows realistic badges/counts.
+const DEMO_SESSIONS = [
+  { id: 'p1', storyTitle: 'Ang Taniman ni Lolo Pedro', score: 75, stars: 4 },
+  { id: 'p2', storyTitle: 'Si Inang at ang Bibingka', score: 80, stars: 4 },
+  { id: 'p3', storyTitle: 'Ang Lipad ng Saranggola', score: 100, stars: 5 },
+  { id: 'p4', storyTitle: 'The Lost Puppy', score: 68, stars: 3 }
+];
 
 export default function Progress() {
   const { profile } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [unlockedIds, setUnlockedIds] = useState(['first-story', 'streak-3', 'level-3']);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       if (!FIREBASE_ENABLED) {
-        // Use seed leaderboard in demo mode
+        // Demo mode: sample sessions + seed leaderboard
+        if (!cancelled) setSessions(DEMO_SESSIONS);
         const list = SEED_CLASS_STUDENTS.map((s) => ({
           uid: s.id,
           name: s.displayName,
@@ -94,6 +102,11 @@ export default function Progress() {
   }, [profile]);
 
   const level = profile?.currentLevel || 3;
+  const unlockedIds = computeUnlockedBadges({
+    sessions,
+    currentLevel: level,
+    streakDays: profile?.streakDays ?? 5
+  });
   const initials = (profile?.displayName || 'JC')
     .split(' ')
     .map((s) => s[0])

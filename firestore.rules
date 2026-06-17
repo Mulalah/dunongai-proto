@@ -15,10 +15,13 @@ service cloud.firestore {
       return isSignedIn() && userData(request.auth.uid).role == 'teacher';
     }
 
-    // Stories are public read; only signed-in teachers may write/seed them.
+    // Stories are public read. Teachers may create/seed and edit stories;
+    // deletion is restricted to the teacher who authored a custom story
+    // (seed stories have no `createdBy`, so they can't be deleted).
     match /stories/{storyId} {
       allow read: if true;
-      allow write: if isTeacher();
+      allow create, update: if isTeacher();
+      allow delete: if isTeacher() && resource.data.createdBy == request.auth.uid;
     }
 
     // A user can read/write their own profile.

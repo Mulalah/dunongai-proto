@@ -14,7 +14,7 @@ import {
   getSectionById,
   setSectionStories
 } from '../../utils/sections';
-import { getAllStories, createStory } from '../../utils/stories';
+import { getAllStories, createStory, deleteStory } from '../../utils/stories';
 
 const TABS = [
   { id: 'all', label: 'Lahat' },
@@ -51,6 +51,16 @@ export default function ClassDashboard() {
   const [composeOpen, setComposeOpen] = useState(false);
   const [draft, setDraft] = useState({ title: '', level: 1, language: 'Filipino', text: '', tapWords: '' });
   const [publishing, setPublishing] = useState(false);
+
+  // Story-list filters (teacher manager)
+  const [filterLevel, setFilterLevel] = useState('all');
+  const [filterLang, setFilterLang] = useState('all');
+
+  const visibleStories = catalog.filter(
+    (s) =>
+      (filterLevel === 'all' || s.level === Number(filterLevel)) &&
+      (filterLang === 'all' || s.language === filterLang)
+  );
 
   // Load the story catalog (seed + teacher-published) once.
   useEffect(() => {
@@ -165,6 +175,21 @@ export default function ClassDashboard() {
       setComposeOpen(false);
     } finally {
       setPublishing(false);
+    }
+  }
+
+  async function handleDeleteStory(story) {
+    if (!window.confirm(`Burahin ang "${story.title}"? Hindi na ito maibabalik.`)) return;
+    try {
+      await deleteStory(story, teacherId);
+      setCatalog((prev) => prev.filter((s) => s.id !== story.id));
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(story.id);
+        return next;
+      });
+    } catch (e) {
+      window.alert(e.message || 'Hindi mabura ang kwento.');
     }
   }
 
@@ -477,34 +502,84 @@ export default function ClassDashboard() {
               </form>
             )}
 
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="text-[11px] uppercase tracking-wide text-slate-500 font-bold">Filter</span>
+              <select
+                value={filterLevel}
+                onChange={(e) => setFilterLevel(e.target.value)}
+                className="h-9 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:border-teal focus:outline-none"
+              >
+                <option value="all">Lahat ng antas</option>
+                {[1, 2, 3, 4, 5, 6].map((g) => (
+                  <option key={g} value={g}>
+                    Antas {g}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filterLang}
+                onChange={(e) => setFilterLang(e.target.value)}
+                className="h-9 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:border-teal focus:outline-none"
+              >
+                <option value="all">Lahat ng wika</option>
+                <option value="Filipino">Filipino</option>
+                <option value="English">English</option>
+              </select>
+              <span className="text-xs text-slate-400">
+                {visibleStories.length} ng {catalog.length} kwento
+              </span>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
-              {catalog.map((s) => {
+              {visibleStories.map((s) => {
                 const on = selected.has(s.id);
+                const mine = s.createdBy && s.createdBy === teacherId;
                 return (
-                  <label
+                  <div
                     key={s.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                    className={`flex items-center gap-2 p-3 rounded-xl border transition ${
                       on ? 'border-teal bg-teal/5' : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={on}
-                      onChange={() => toggleStory(s.id)}
-                      className="accent-teal w-4 h-4"
-                    />
-                    <span className="text-xl">{s.emoji}</span>
-                    <span className="flex-1 min-w-0">
-                      <span className="block font-heading font-semibold text-sm text-navy truncate">
-                        {s.title}
+                    <label className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        onChange={() => toggleStory(s.id)}
+                        className="accent-teal w-4 h-4"
+                      />
+                      <span className="text-xl">{s.emoji}</span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block font-heading font-semibold text-sm text-navy truncate">
+                          {s.title}
+                          {mine && (
+                            <span className="ml-1 text-[10px] text-teal font-bold uppercase">· akin</span>
+                          )}
+                        </span>
+                        <span className="block text-[11px] text-slate-500">
+                          Antas {s.level} · {s.language}
+                        </span>
                       </span>
-                      <span className="block text-[11px] text-slate-500">
-                        Antas {s.level} · {s.language}
-                      </span>
-                    </span>
-                  </label>
+                    </label>
+                    {mine && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteStory(s)}
+                        title="Burahin ang kwento"
+                        className="shrink-0 text-slate-400 hover:text-red-500 transition px-1"
+                      >
+                        🗑
+                      </button>
+                    )}
+                  </div>
                 );
               })}
+              {visibleStories.length === 0 && (
+                <div className="col-span-full text-center text-sm text-slate-400 py-6">
+                  Walang kwentong tumutugma sa filter.
+                </div>
+              )}
             </div>
 
             <div className="mt-4 flex items-center gap-3">

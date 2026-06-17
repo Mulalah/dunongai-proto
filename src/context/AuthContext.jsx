@@ -23,8 +23,10 @@ const DEMO_PROFILES = {
     displayName: 'Juan dela Cruz',
     email: 'student@dunongai.ph',
     teacherId: 'demo-teacher-001',
+    sectionId: 'demo-section-rizal',
     gradeLevel: 3,
     currentLevel: 3,
+    streakDays: 5,
     schoolName: 'Rizal Elementary School',
     hasCompletedDiagnostic: false
   },
@@ -117,10 +119,17 @@ export function AuthProvider({ children }) {
     // Demo accounts work without Firebase
     const demo = DEMO_PROFILES[email];
     if (demo && password === 'dunong123') {
-      sessionStorage.setItem('dunong_demo_user', JSON.stringify(demo));
-      setUser({ email, uid: demo.uid });
-      setProfile(demo);
-      return demo;
+      // Merge any locally-saved progress (e.g. completed diagnostic) so demo
+      // accounts don't reset every login.
+      let overrides = {};
+      try {
+        overrides = JSON.parse(localStorage.getItem(`dunong_demo_${demo.uid}`) || '{}');
+      } catch {}
+      const merged = { ...demo, ...overrides };
+      sessionStorage.setItem('dunong_demo_user', JSON.stringify(merged));
+      setUser({ email, uid: merged.uid });
+      setProfile(merged);
+      return merged;
     }
     // Try Firebase (only when configured)
     if (!FIREBASE_ENABLED) throw new Error('Hindi tumugma ang email/password.');
@@ -174,8 +183,10 @@ export function AuthProvider({ children }) {
       const next = { ...prev, ...patch };
       const stored = sessionStorage.getItem('dunong_demo_user');
       if (stored) {
-        // Demo session: persist locally only
+        // Demo session: persist to sessionStorage (current session) AND
+        // localStorage (survives logout, so diagnostic isn't repeated).
         sessionStorage.setItem('dunong_demo_user', JSON.stringify(next));
+        if (next.uid) localStorage.setItem(`dunong_demo_${next.uid}`, JSON.stringify(next));
       } else if (FIREBASE_ENABLED && next.uid) {
         // Real account: persist to Firestore (fire-and-forget)
         updateDoc(doc(db, 'users', next.uid), patch).catch(() => {});

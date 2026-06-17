@@ -11,7 +11,7 @@ const ROLE_CONFIG = {
     title: 'Gumawa ng Account 🎒',
     subtitle: 'Magsimula ng iyong reading adventure!',
     loginPath: '/login/student',
-    redirect: '/student/quiz'
+    redirect: '/student/library'
   },
   teacher: {
     title: 'Account ng Guro 👩‍🏫',

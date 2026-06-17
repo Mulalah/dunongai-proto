@@ -41,8 +41,13 @@ export default function StoryLibrary() {
     try {
       const section = await joinSection(profile?.uid, joinCode);
       updateProfile({ sectionId: section.id, teacherId: section.teacherId });
-      setJoinMsg({ ok: true, text: `Sumali ka na sa "${section.name}"! 🎉` });
       setJoinCode('');
+      // First time joining → take the placement quiz once.
+      if (!profile?.hasCompletedDiagnostic) {
+        navigate('/student/quiz');
+        return;
+      }
+      setJoinMsg({ ok: true, text: `Sumali ka na sa "${section.name}"! 🎉` });
     } catch (err) {
       setJoinMsg({ ok: false, text: err.message || 'Hindi makasali sa section.' });
     } finally {
@@ -129,6 +134,42 @@ export default function StoryLibrary() {
 
   const level = profile?.currentLevel || 3;
   const streak = profile?.streakDays ?? 5;
+
+  // New students must join a section first — no stories shown until then.
+  if (profile && !profile.sectionId) {
+    return (
+      <PageWrapper role="student">
+        <TopBar title="Maligayang pagdating! 🎒" subtitle="Sumali muna sa iyong section" />
+        <div className="p-8 page-enter flex justify-center">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-card p-8 text-center mt-6">
+            <div className="text-5xl mb-3">🔑</div>
+            <h2 className="font-heading font-extrabold text-navy text-2xl">Sumali sa iyong section</h2>
+            <p className="text-slate-500 mt-2">
+              Ipasok ang section code na ibinigay ng iyong guro para makita ang mga kwento.
+            </p>
+            <form onSubmit={handleJoinSection} className="mt-6 space-y-3">
+              <input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                placeholder="SECTION CODE"
+                className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 text-center text-lg font-mono tracking-[0.3em] focus:border-teal focus:bg-white focus:outline-none transition"
+              />
+              <button
+                type="submit"
+                disabled={joining}
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-teal to-teal-600 text-white font-heading font-bold btn-press disabled:opacity-60"
+              >
+                {joining ? 'Sumasali…' : 'Sumali sa Section →'}
+              </button>
+            </form>
+            {joinMsg && !joinMsg.ok && (
+              <div className="mt-3 text-sm text-red-600">{joinMsg.text}</div>
+            )}
+          </div>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper role="student">

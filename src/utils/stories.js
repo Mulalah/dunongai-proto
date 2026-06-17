@@ -6,6 +6,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  deleteDoc,
   Timestamp
 } from '../firebase';
 import { SEED_STORIES } from './seedData';
@@ -76,4 +77,17 @@ export async function createStory(teacherId, { title, level, language, text, aut
   }
   await setDoc(doc(db, 'stories', id), { ...story, createdAt: Timestamp.now() });
   return story;
+}
+
+// Delete a story — only allowed for custom stories created by this teacher.
+// Seed stories (no `createdBy`) can never be deleted.
+export async function deleteStory(story, teacherId) {
+  if (!story?.createdBy || story.createdBy !== teacherId) {
+    throw new Error('Mga sarili mong kwento lang ang puwedeng burahin.');
+  }
+  if (!FIREBASE_ENABLED) {
+    saveCustomLocal(getCustomLocal().filter((s) => s.id !== story.id));
+    return;
+  }
+  await deleteDoc(doc(db, 'stories', story.id));
 }

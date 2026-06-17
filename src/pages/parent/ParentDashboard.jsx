@@ -5,7 +5,7 @@ import BadgeCard from '../../components/student/BadgeCard';
 import ScoreTrendChart from '../../components/teacher/ScoreTrendChart';
 import { useAuth } from '../../context/AuthContext';
 import Logo from '../../components/ui/Logo';
-import { BADGES, LEVEL_NAMES } from '../../utils/levelUtils';
+import { BADGES, LEVEL_NAMES, computeUnlockedBadges } from '../../utils/levelUtils';
 import {
   db,
   FIREBASE_ENABLED,
@@ -87,7 +87,11 @@ export default function ParentDashboard() {
   }, [childId]);
 
   const p = progress || DEMO_PROGRESS;
-  const unlockedIds = (p.badges || []).map((b) => b.badgeId);
+  const unlockedIds = computeUnlockedBadges({
+    sessions,
+    currentLevel: p.currentLevel || 3,
+    streakDays: p.streakDays ?? 0
+  });
   const recent = sessions.slice(0, 6);
 
   return (

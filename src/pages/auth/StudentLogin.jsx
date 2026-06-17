@@ -19,8 +19,14 @@ export default function StudentLogin() {
     setLoading(true);
     try {
       const profile = await login(email, password);
-      const hasDiagnostic = profile?.hasCompletedDiagnostic;
-      navigate(hasDiagnostic ? '/student/library' : '/student/quiz');
+      // No section yet → join first (library shows the join prompt, no stories).
+      // In a section but no diagnostic → take it once. Otherwise → library.
+      const dest = !profile?.sectionId
+        ? '/student/library'
+        : !profile?.hasCompletedDiagnostic
+        ? '/student/quiz'
+        : '/student/library';
+      navigate(dest);
     } catch (e2) {
       setErr(e2.message || 'Hindi tumugma ang email/password.');
     } finally {
