@@ -3,6 +3,7 @@ import {
   FIREBASE_ENABLED,
   collection,
   addDoc,
+  getDoc,
   getDocs,
   query,
   where,
@@ -65,6 +66,27 @@ export async function findSectionByCode(code) {
   if (snap.empty) return null;
   const d = snap.docs[0];
   return { id: d.id, ...d.data() };
+}
+
+export async function getSectionById(sectionId) {
+  if (!sectionId) return null;
+  if (!FIREBASE_ENABLED) {
+    const base = DEMO_SECTIONS.find((s) => s.id === sectionId) || { id: sectionId };
+    const stored = localStorage.getItem(`dunong_section_stories_${sectionId}`);
+    return { ...base, storyIds: stored ? JSON.parse(stored) : undefined };
+  }
+  const snap = await getDoc(doc(db, 'sections', sectionId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// Set which stories are available to a section.
+// storyIds === undefined/null means "all stories" (no restriction yet).
+export async function setSectionStories(sectionId, storyIds) {
+  if (!FIREBASE_ENABLED) {
+    localStorage.setItem(`dunong_section_stories_${sectionId}`, JSON.stringify(storyIds));
+    return;
+  }
+  await updateDoc(doc(db, 'sections', sectionId), { storyIds });
 }
 
 // Attach an existing student to a section (sets sectionId + derived teacherId).

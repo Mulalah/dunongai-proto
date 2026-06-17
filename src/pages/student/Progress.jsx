@@ -45,14 +45,13 @@ export default function Progress() {
         if (!cancelled) setSessions([]);
       }
 
-      // Leaderboard from class
+      // Leaderboard scoped to the student's own section (no cross-section overlap).
+      // Falls back to the whole class only if the student has no section yet.
       try {
-        const tSnap = await getDocs(
-          query(
-            collection(db, 'users'),
-            where('teacherId', '==', profile?.teacherId || 'demo-teacher-001')
-          )
-        );
+        const scope = profile?.sectionId
+          ? where('sectionId', '==', profile.sectionId)
+          : where('teacherId', '==', profile?.teacherId || 'demo-teacher-001');
+        const tSnap = await getDocs(query(collection(db, 'users'), scope));
         const all = tSnap.docs.map((d) => ({ uid: d.id, ...d.data() }));
         // Add current student
         all.push({

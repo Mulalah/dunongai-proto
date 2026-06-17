@@ -3,11 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import TopBar from '../../components/layout/TopBar';
 import StatCard from '../../components/ui/StatCard';
+import Button from '../../components/ui/Button';
 import StudentRow from '../../components/teacher/StudentRow';
 import { useAuth } from '../../context/AuthContext';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where } from '../../firebase';
 import { SEED_CLASS_STUDENTS } from '../../utils/seedData';
-import { getSectionsForTeacher, createSection } from '../../utils/sections';
+import {
+  getSectionsForTeacher,
+  createSection,
+  getSectionById,
+  setSectionStories
+} from '../../utils/sections';
+import { getAllStories, createStory } from '../../utils/stories';
 
 const TABS = [
   { id: 'all', label: 'Lahat' },
@@ -31,6 +38,32 @@ export default function ClassDashboard() {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Story assignment per section
+  const [catalog, setCatalog] = useState([]); // all stories the teacher can assign
+  const [storyMgrOpen, setStoryMgrOpen] = useState(false);
+  const [assignedIds, setAssignedIds] = useState(null); // null = all stories (no restriction)
+  const [selected, setSelected] = useState(new Set());
+  const [savingStories, setSavingStories] = useState(false);
+  const [storiesSaved, setStoriesSaved] = useState(false);
+
+  // Publish a new story
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [draft, setDraft] = useState({ title: '', level: 1, language: 'Filipino', text: '', tapWords: '' });
+  const [publishing, setPublishing] = useState(false);
+
+  // Load the story catalog (seed + teacher-published) once.
+  useEffect(() => {
+    let cancelled = false;
+    getAllStories()
+      .then((list) => {
+        if (!cancelled) setCatalog(list);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const activeSection = sections.find((s) => s.id === activeSectionId) || null;
 
@@ -82,9 +115,78 @@ export default function ClassDashboard() {
     };
   }, [teacherId, activeSectionId]);
 
+  // Load the active section's assigned stories whenever it changes.
+  useEffect(() => {
+    let cancelled = false;
+    setStoryMgrOpen(false);
+    setStoriesSaved(false);
+    if (!activeSectionId) {
+      setAssignedIds(null);
+      return;
+    }
+    (async () => {
+      try {
+        const section = await getSectionById(activeSectionId);
+        if (!cancelled) setAssignedIds(Array.isArray(section?.storyIds) ? section.storyIds : null);
+      } catch {
+        if (!cancelled) setAssignedIds(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSectionId]);
+
   function switchSection(id) {
     setActiveSectionId(id);
     localStorage.setItem(`dunong_active_section_${teacherId}`, id);
+  }
+
+  function openStoryManager() {
+    // null (all) → start with everything selected
+    setSelected(new Set(assignedIds ?? catalog.map((s) => s.id)));
+    setStoriesSaved(false);
+    setStoryMgrOpen(true);
+  }
+
+  async function handlePublishStory(e) {
+    e.preventDefault();
+    if (!draft.title.trim() || !draft.text.trim()) return;
+    setPublishing(true);
+    try {
+      const tapWords = draft.tapWords
+        .split(',')
+        .map((w) => w.trim())
+        .filter(Boolean);
+      const story = await createStory(teacherId, { ...draft, tapWords, author: profile?.displayName });
+      setCatalog((prev) => [...prev, story]);
+      setSelected((prev) => new Set(prev).add(story.id)); // auto-include in current selection
+      setDraft({ title: '', level: 1, language: 'Filipino', text: '', tapWords: '' });
+      setComposeOpen(false);
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  function toggleStory(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function saveStoryAssignment() {
+    if (!activeSectionId) return;
+    setSavingStories(true);
+    const ids = [...selected];
+    try {
+      await setSectionStories(activeSectionId, ids);
+      setAssignedIds(ids);
+      setStoriesSaved(true);
+    } finally {
+      setSavingStories(false);
+    }
   }
 
   async function handleCreateSection(e) {
@@ -203,6 +305,15 @@ export default function ClassDashboard() {
             </div>
           )}
 
+          {activeSection && (
+            <button
+              onClick={() => (storyMgrOpen ? setStoryMgrOpen(false) : openStoryManager())}
+              className="text-sm font-heading font-semibold text-navy bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition"
+            >
+              📖 Mga Kwento ({assignedIds ? assignedIds.length : catalog.length})
+            </button>
+          )}
+
           <div className="ml-auto">
             {creating ? (
               <form onSubmit={handleCreateSection} className="flex items-center gap-2">
@@ -237,6 +348,175 @@ export default function ClassDashboard() {
             )}
           </div>
         </div>
+
+        {/* Story assignment manager */}
+        {storyMgrOpen && activeSection && (
+          <div className="mb-6 bg-white rounded-2xl shadow-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 className="font-heading font-bold text-navy">
+                  Mga Kwento para sa {activeSection.name}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Piliin kung aling kwento ang makikita ng mga estudyante sa section na ito.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setComposeOpen((v) => !v)}
+                  className="text-xs font-semibold text-white bg-gradient-to-r from-teal to-teal-600 px-3 py-1.5 rounded-lg btn-press"
+                >
+                  ➕ Gumawa ng Kwento
+                </button>
+                <button
+                  onClick={() => setSelected(new Set(catalog.map((s) => s.id)))}
+                  className="text-xs text-teal font-semibold hover:underline"
+                >
+                  Piliin lahat
+                </button>
+                <span className="text-slate-300">·</span>
+                <button
+                  onClick={() => setSelected(new Set())}
+                  className="text-xs text-slate-500 font-semibold hover:underline"
+                >
+                  Alisin lahat
+                </button>
+              </div>
+            </div>
+
+            {/* Compose a new story */}
+            {composeOpen && (
+              <form
+                onSubmit={handlePublishStory}
+                className="mb-4 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3"
+              >
+                <div className="flex flex-wrap gap-3">
+                  <input
+                    required
+                    value={draft.title}
+                    onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+                    placeholder="Pamagat ng kwento"
+                    className="flex-1 min-w-[200px] h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-teal focus:outline-none"
+                  />
+                  <select
+                    value={draft.level}
+                    onChange={(e) => setDraft((d) => ({ ...d, level: e.target.value }))}
+                    className="h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-teal focus:outline-none"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map((g) => (
+                      <option key={g} value={g}>
+                        Antas {g}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={draft.language}
+                    onChange={(e) => setDraft((d) => ({ ...d, language: e.target.value }))}
+                    className="h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-teal focus:outline-none"
+                  >
+                    <option>Filipino</option>
+                    <option>English</option>
+                  </select>
+                </div>
+                <textarea
+                  required
+                  value={draft.text}
+                  onChange={(e) => setDraft((d) => ({ ...d, text: e.target.value }))}
+                  placeholder="Isulat dito ang buong kwento…"
+                  rows={6}
+                  className="w-full p-3 rounded-lg border border-slate-200 text-sm focus:border-teal focus:outline-none reading-text"
+                />
+                <div>
+                  <input
+                    value={draft.tapWords}
+                    onChange={(e) => setDraft((d) => ({ ...d, tapWords: e.target.value }))}
+                    placeholder="Mga salitang ie-highlight (hal. taniman, kamatis, pag-aalaga)"
+                    className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:border-teal focus:outline-none"
+                  />
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    Paghiwalayin ng kuwit. Ito ang mga salitang puwedeng i-tap ng estudyante para
+                    ipaliwanag ni Basa Bot. Dapat tumugma ang spelling sa kwento.
+                  </p>
+
+                  {draft.tapWords.trim() && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {draft.tapWords
+                        .split(',')
+                        .map((w) => w.trim())
+                        .filter(Boolean)
+                        .map((w, i) => {
+                          const found = draft.text.toLowerCase().includes(w.toLowerCase());
+                          return (
+                            <span
+                              key={`${w}-${i}`}
+                              className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                                found
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+                              }`}
+                            >
+                              {found ? '✓' : '⚠'} {w}
+                            </span>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button size="md" loading={publishing} onClick={handlePublishStory}>
+                    I-publish ang Kwento
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setComposeOpen(false)}
+                    className="text-sm text-slate-500 hover:underline"
+                  >
+                    Kanselahin
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
+              {catalog.map((s) => {
+                const on = selected.has(s.id);
+                return (
+                  <label
+                    key={s.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                      on ? 'border-teal bg-teal/5' : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={() => toggleStory(s.id)}
+                      className="accent-teal w-4 h-4"
+                    />
+                    <span className="text-xl">{s.emoji}</span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block font-heading font-semibold text-sm text-navy truncate">
+                        {s.title}
+                      </span>
+                      <span className="block text-[11px] text-slate-500">
+                        Antas {s.level} · {s.language}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex items-center gap-3">
+              <Button size="md" loading={savingStories} onClick={saveStoryAssignment}>
+                I-save ({selected.size})
+              </Button>
+              {storiesSaved && (
+                <span className="text-sm text-emerald-600 font-semibold">Na-save! ✓</span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">

@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   signOut,
   doc,
   getDoc,
@@ -146,6 +147,10 @@ export function AuthProvider({ children }) {
       const uid = res.user.uid;
       const fullProfile = { uid, email, ...profileData };
       await setDoc(doc(db, 'users', uid), fullProfile);
+      // Send a verification link (non-blocking — signup still succeeds if email fails)
+      try {
+        await sendEmailVerification(res.user);
+      } catch {}
       setUser({ email, uid });
       setProfile(fullProfile);
       return fullProfile;

@@ -5,9 +5,9 @@ import TopBar from '../../components/layout/TopBar';
 import StoryCard from '../../components/student/StoryCard';
 import Badge from '../../components/ui/Badge';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where } from '../../firebase';
-import { SEED_STORIES } from '../../utils/seedData';
 import { useAuth } from '../../context/AuthContext';
-import { joinSection } from '../../utils/sections';
+import { joinSection, getSectionById } from '../../utils/sections';
+import { getAllStories } from '../../utils/stories';
 
 const FILTERS = [
   'ALL',
@@ -50,21 +50,34 @@ export default function StoryLibrary() {
     }
   }
 
+  // Keep only stories the student's section has been assigned.
+  // No section, or a section without an explicit list → all stories.
+  async function applySectionFilter(list) {
+    if (!profile?.sectionId) return list;
+    try {
+      const section = await getSectionById(profile.sectionId);
+      if (section && Array.isArray(section.storyIds)) {
+        return list.filter((s) => section.storyIds.includes(s.id));
+      }
+    } catch {}
+    return list;
+  }
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      if (!FIREBASE_ENABLED) {
-        if (!cancelled) { setStories(SEED_STORIES); setLoading(false); }
-        return;
-      }
       try {
-        const snap = await getDocs(collection(db, 'stories'));
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        // Fall back to seed data if Firestore returned a partial result
-        if (!cancelled) setStories(list.length >= SEED_STORIES.length ? list : SEED_STORIES);
+        const full = await getAllStories();
+        const list = await applySectionFilter(full);
+        if (!cancelled) setStories(list);
       } catch {
-        if (!cancelled) setStories(SEED_STORIES);
+        if (!cancelled) setStories([]);
+      }
+
+      if (!FIREBASE_ENABLED) {
+        if (!cancelled) setLoading(false);
+        return;
       }
 
       // Load completed stories from sessions
@@ -91,7 +104,7 @@ export default function StoryLibrary() {
     return () => {
       cancelled = true;
     };
-  }, [profile?.uid]);
+  }, [profile?.uid, profile?.sectionId]);
 
   const filtered = useMemo(() => {
     let arr = stories;

@@ -3,10 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../components/layout/Sidebar';
 import BasaBotPanel from '../../components/student/BasaBotPanel';
 import Badge from '../../components/ui/Badge';
-import { db, FIREBASE_ENABLED, doc, getDoc } from '../../firebase';
-import { SEED_STORIES } from '../../utils/seedData';
 import { formatTime } from '../../utils/levelUtils';
-import useSpeech from '../../utils/useSpeech';
+import { getStoryById } from '../../utils/stories';
 
 function renderStory(text, tapWords, onTap) {
   if (!text) return null;
@@ -51,22 +49,16 @@ export default function StoryReader() {
   const [loading, setLoading] = useState(true);
   const [seconds, setSeconds] = useState(0);
   const botRef = useRef(null);
-  const { supported: ttsSupported, speaking, paused, speak, pause, stop } = useSpeech();
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      const seed = SEED_STORIES.find((s) => s.id === id) || SEED_STORIES[0];
-      if (!FIREBASE_ENABLED) {
-        if (!cancelled) { setStory(seed); setLoading(false); }
-        return;
-      }
       try {
-        const snap = await getDoc(doc(db, 'stories', id));
-        if (!cancelled) setStory(snap.exists() ? { id: snap.id, ...snap.data() } : seed);
+        const found = await getStoryById(id);
+        if (!cancelled) setStory(found);
       } catch {
-        if (!cancelled) setStory(seed);
+        if (!cancelled) setStory(null);
       }
       if (!cancelled) setLoading(false);
     }
@@ -86,7 +78,6 @@ export default function StoryReader() {
   }
 
   function finish() {
-    stop();
     sessionStorage.setItem(
       'reading_session',
       JSON.stringify({
@@ -130,6 +121,11 @@ export default function StoryReader() {
                   <div className="skeleton h-3 w-11/12" />
                   <div className="skeleton h-3 w-10/12" />
                 </div>
+              ) : !story ? (
+                <div className="text-center text-slate-500 py-16">
+                  <div className="text-3xl mb-2">📭</div>
+                  Hindi nahanap ang kwentong ito.
+                </div>
               ) : (
                 <article className="page-enter">
                   <h1 className="font-heading font-bold text-navy text-3xl leading-tight">
@@ -141,34 +137,6 @@ export default function StoryReader() {
                     <span className="text-xs text-slate-400 italic">— {story.author}</span>
                   </div>
                   <div className="mt-2 h-1 w-10 rounded bg-gold" />
-
-                  {ttsSupported && (
-                    <div className="mt-5 flex items-center gap-2">
-                      {!speaking ? (
-                        <button
-                          onClick={() => speak(story.text)}
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal/10 text-teal font-heading font-semibold text-sm hover:bg-teal/20 transition btn-press"
-                        >
-                          🔊 Pakinggan
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            onClick={pause}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal/10 text-teal font-heading font-semibold text-sm hover:bg-teal/20 transition btn-press"
-                          >
-                            {paused ? '▶️ Ituloy' : '⏸ I-pause'}
-                          </button>
-                          <button
-                            onClick={stop}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-500 font-heading font-semibold text-sm hover:bg-slate-200 transition btn-press"
-                          >
-                            ⏹ Itigil
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
 
                   <div className="reading-text mt-8">
                     {renderStory(story.text, story.tapWords, handleTapWord)}

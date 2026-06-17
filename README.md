@@ -3,6 +3,25 @@
 An AI-powered adaptive reading companion for K–6 Filipino public school students.
 Built for ISS170 Technopreneurship demo.
 
+## 🔎 How to Review This Demo
+
+**Live app:** https://dunongai.vercel.app
+
+Sign in instantly with any of these demo accounts (no registration needed):
+
+| Role    | Email                  | Password    |
+|---------|------------------------|-------------|
+| Student | `student@dunongai.ph`  | `dunong123` |
+| Teacher | `teacher@dunongai.ph`  | `dunong123` |
+| Parent  | `parent@dunongai.ph`   | `dunong123` |
+
+**Suggested 4–6 min walkthrough:**
+1. Student login → **Diagnostic Quiz** → AI assigns a reading level
+2. **Story Library** → open a story → tap a gold-underlined word → **Basa Bot** replies
+3. **"Tapos na Basahin"** → AI comprehension questions → score + level-up screen → **Progreso**
+4. Log out → Teacher login → **Dashboard** (create/switch sections, see a flagged student → profile → **Generate AI Summary**)
+5. Log out → Parent login → **child's progress dashboard**
+
 ## Quick Start
 
 ```bash
@@ -23,7 +42,7 @@ These accounts work even without Firebase configured (sessionStorage-based demo 
 
 ## Demo Mode
 
-If `VITE_CLAUDE_API_KEY` is missing, the app runs in **demo mode**:
+If `VITE_AI_ENABLED` is not `true`, the app runs in **demo mode** (live AI goes through the `/api/claude` serverless proxy — see [SETUP.md](SETUP.md)):
 - All Claude API calls return curated fallbacks after a ~1.5s delay
 - A small "Demo" badge appears on the Basa Bot panel and AI Summary card
 - Pre-seeded stories, students, and sessions render the entire UX without any backend

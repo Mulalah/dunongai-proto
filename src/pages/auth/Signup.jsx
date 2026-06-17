@@ -27,6 +27,15 @@ const ROLE_CONFIG = {
   }
 };
 
+// Password requirements, checked live as the user types.
+const PW_RULES = [
+  { test: (p) => p.length >= 8, label: 'Hindi bababa sa 8 karakter' },
+  { test: (p) => /[A-Z]/.test(p), label: 'May malaking titik (A–Z)' },
+  { test: (p) => /[a-z]/.test(p), label: 'May maliit na titik (a–z)' },
+  { test: (p) => /[0-9]/.test(p), label: 'May numero (0–9)' },
+  { test: (p) => /[^A-Za-z0-9]/.test(p), label: 'May espesyal na karakter (!@#$…)' }
+];
+
 export default function Signup() {
   const { role: rawRole } = useParams();
   const role = ROLE_CONFIG[rawRole] ? rawRole : 'student';
@@ -46,22 +55,22 @@ export default function Signup() {
   });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [done, setDone] = useState(null); // email address after a successful signup
+
+  const passwordValid = PW_RULES.every((r) => r.test(form.password));
 
   function set(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  // Single-field query (email only) so no Firestore composite index is required;
+  // the role is filtered in JS.
   async function findStudentByEmail(email) {
     const snap = await getDocs(
-      query(
-        collection(db, 'users'),
-        where('email', '==', email.trim().toLowerCase()),
-        where('role', '==', 'student')
-      )
+      query(collection(db, 'users'), where('email', '==', email.trim().toLowerCase()))
     );
-    if (snap.empty) return null;
-    const d = snap.docs[0];
-    return { uid: d.id, ...d.data() };
+    const match = snap.docs.find((d) => d.data().role === 'student');
+    return match ? { uid: match.id, ...match.data() } : null;
   }
 
   function buildProfile(child, section) {
@@ -98,6 +107,10 @@ export default function Signup() {
   async function handleSubmit(e) {
     e.preventDefault();
     setErr('');
+    if (!passwordValid) {
+      setErr('Hindi pa naaabot ng password ang lahat ng kinakailangan sa ibaba.');
+      return;
+    }
     setLoading(true);
     try {
       let child = null;
@@ -118,7 +131,7 @@ export default function Signup() {
         }
       }
       await signup(form.email.trim().toLowerCase(), form.password, buildProfile(child, section));
-      navigate(cfg.redirect);
+      setDone(form.email.trim().toLowerCase());
     } catch (e2) {
       setErr(e2.message || 'May problema sa pagrehistro.');
     } finally {
@@ -148,6 +161,23 @@ export default function Signup() {
 
       {/* RIGHT form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-white">
+        {done ? (
+          <div className="w-full max-w-md text-center page-enter">
+            <div className="text-5xl mb-3">📧</div>
+            <h1 className="font-heading font-extrabold text-navy text-3xl">Halos tapos na!</h1>
+            <p className="text-slate-600 mt-3">
+              Nagpadala kami ng verification link sa{' '}
+              <span className="font-semibold text-navy">{done}</span>. Pakibuksan ito para
+              kumpirmahin ang iyong account.
+            </p>
+            <Button size="lg" className="w-full mt-6" onClick={() => navigate(cfg.redirect)}>
+              Magpatuloy →
+            </Button>
+            <p className="text-xs text-slate-400 mt-3">
+              Hindi mo nakita? Tingnan ang iyong spam o junk folder.
+            </p>
+          </div>
+        ) : (
         <div className="w-full max-w-md page-enter">
           <h1 className="font-heading font-extrabold text-navy text-3xl">{cfg.title}</h1>
           <p className="text-slate-500 mt-1.5">{cfg.subtitle}</p>
@@ -178,12 +208,28 @@ export default function Signup() {
             <input
               type="password"
               required
-              minLength={6}
               value={form.password}
               onChange={(e) => set('password', e.target.value)}
-              placeholder="Password (6+ na karakter)"
+              placeholder="Password"
               className={inputCls}
+              aria-invalid={form.password.length > 0 && !passwordValid}
             />
+
+            {form.password.length > 0 && (
+              <ul className="-mt-1 grid grid-cols-1 gap-0.5 text-xs">
+                {PW_RULES.map((r) => {
+                  const ok = r.test(form.password);
+                  return (
+                    <li
+                      key={r.label}
+                      className={ok ? 'text-emerald-600' : 'text-slate-400'}
+                    >
+                      {ok ? '✓' : '○'} {r.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
 
             {role === 'student' && (
               <>
@@ -251,7 +297,13 @@ export default function Signup() {
               </div>
             )}
 
-            <Button type="submit" size="lg" loading={loading} className="w-full">
+            <Button
+              type="submit"
+              size="lg"
+              loading={loading}
+              disabled={!passwordValid}
+              className="w-full"
+            >
               Mag-sign up →
             </Button>
 
@@ -263,6 +315,7 @@ export default function Signup() {
             </div>
           </form>
         </div>
+        )}
       </div>
     </div>
   );
