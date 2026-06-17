@@ -1,0 +1,54 @@
+<svg width="360" height="320" viewBox="0 0 360 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DunongAI — Basahin Natin Ito!">
+  <defs>
+    <linearGradient id="dai-tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2FB9AE"/>
+      <stop offset="1" stop-color="#0B8178"/>
+    </linearGradient>
+    <linearGradient id="dai-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD36B"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="dai-page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF4F2"/>
+    </linearGradient>
+    <radialGradient id="dai-sheen" cx="0.3" cy="0.18" r="0.9">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="0.6" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="dai-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.2"/>
+    </filter>
+  </defs>
+
+  <g transform="translate(130,16)">
+    <rect x="2" y="2" width="96" height="96" rx="26" fill="url(#dai-tile)"/>
+    <rect x="2" y="2" width="96" height="96" rx="26" fill="url(#dai-sheen)"/>
+    <rect x="2.6" y="2.6" width="94.8" height="94.8" rx="25.4" fill="none" stroke="#FFFFFF" stroke-opacity="0.10"/>
+    <g opacity="0.18" filter="url(#dai-glow)">
+      <path d="M50,60 C40,55 29,53 22,54 L22,75 C29,74 40,75 50,79 Z" fill="#04332E"/>
+      <path d="M50,60 C60,55 71,53 78,54 L78,75 C71,74 60,75 50,79 Z" fill="#04332E"/>
+    </g>
+    <g transform="translate(50,38)" filter="url(#dai-glow)" opacity="0.6">
+      <path d="M0,-11 C1.9,-3.6 3.6,-1.9 11,0 C3.6,1.9 1.9,3.6 0,11 C-1.9,3.6 -3.6,1.9 -11,0 C-3.6,-1.9 -1.9,-3.6 0,-11 Z" fill="#FFC94D"/>
+    </g>
+    <path d="M50,58 C40,53 29,51 22,52 L22,73 C29,72 40,73 50,77 Z" fill="url(#dai-page)"/>
+    <path d="M50,58 C60,53 71,51 78,52 L78,73 C71,72 60,73 50,77 Z" fill="url(#dai-page)"/>
+    <path d="M50,58 L50,77" stroke="#0A1628" stroke-opacity="0.16" stroke-width="1.4" stroke-linecap="round"/>
+    <g stroke="#0D9488" stroke-opacity="0.30" stroke-width="1.5" stroke-linecap="round" fill="none">
+      <path d="M28,59 C34,58 41,59 45,61"/>
+      <path d="M27,64 C33,63 41,64 45,66"/>
+      <path d="M72,59 C66,58 59,59 55,61"/>
+      <path d="M73,64 C67,63 59,64 55,66"/>
+    </g>
+    <g transform="translate(50,38)">
+      <path d="M0,-11 C1.9,-3.6 3.6,-1.9 11,0 C3.6,1.9 1.9,3.6 0,11 C-1.9,3.6 -3.6,1.9 -11,0 C-3.6,-1.9 -1.9,-3.6 0,-11 Z" fill="url(#dai-gold)"/>
+    </g>
+    <g transform="translate(66,28)">
+      <path d="M0,-4.5 C0.8,-1.5 1.5,-0.8 4.5,0 C1.5,0.8 0.8,1.5 0,4.5 C-0.8,1.5 -1.5,0.8 -4.5,0 C-1.5,-0.8 -0.8,-1.5 0,-4.5 Z" fill="#FFDD80"/>
+    </g>
+  </g>
+
+  <text x="180" y="196" text-anchor="middle" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="58" font-weight="800" letter-spacing="-1.6" fill="#0A1628">Dunong<tspan fill="#F59E0B">AI</tspan></text>
+  <text x="180" y="236" text-anchor="middle" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="24" font-weight="700" letter-spacing="0.2" fill="#F59E0B">Basahin Natin Ito!</text>
+</svg>

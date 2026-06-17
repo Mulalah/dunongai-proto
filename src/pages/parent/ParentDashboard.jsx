@@ -4,6 +4,7 @@ import StatCard from '../../components/ui/StatCard';
 import BadgeCard from '../../components/student/BadgeCard';
 import ScoreTrendChart from '../../components/teacher/ScoreTrendChart';
 import { useAuth } from '../../context/AuthContext';
+import Logo from '../../components/ui/Logo';
 import { BADGES, LEVEL_NAMES } from '../../utils/levelUtils';
 import {
   db,
@@ -98,8 +99,8 @@ export default function ParentDashboard() {
       >
         <div className="max-w-[1100px] mx-auto flex items-center justify-between">
           <div>
-            <div className="font-heading font-extrabold text-2xl">DunongAI</div>
-            <div className="text-white/60 text-sm mt-0.5">Dashboard ng Magulang</div>
+            <Logo variant="dark" className="h-8 w-auto" />
+            <div className="text-white/60 text-sm mt-1">Dashboard ng Magulang</div>
           </div>
           <button
             onClick={async () => {

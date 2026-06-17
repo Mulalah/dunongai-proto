@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LEVEL_NAMES } from '../../utils/levelUtils';
+import Logo from '../ui/Logo';
 
 const NAV = [
   { to: '/student/library', label: 'Mga Kwento', icon: '📚' },
@@ -29,8 +30,7 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="px-6 pt-7 pb-5">
-        <div className="font-heading text-2xl font-extrabold tracking-tight">DunongAI</div>
-        <div className="mt-1.5 h-1 w-10 rounded bg-gold" />
+        <Logo variant="dark" className="h-9 w-auto" />
         <div className="mt-2 text-xs text-white/50 font-body">Basahin Natin Ito!</div>
       </div>
 

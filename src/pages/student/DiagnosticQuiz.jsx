@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { assessReadingLevel } from '../../utils/claude';
 import { useAuth } from '../../context/AuthContext';
+import Logo from '../../components/ui/Logo';
 
 const QUESTIONS = [
   {
@@ -108,8 +109,8 @@ export default function DiagnosticQuiz() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-heading font-extrabold text-navy text-xl">DunongAI</div>
-            <div className="text-xs uppercase tracking-wide text-teal font-bold">
+            <Logo variant="light" className="h-7 w-auto" />
+            <div className="mt-1 text-xs uppercase tracking-wide text-teal font-bold">
               Placement Quiz
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
+import Logo from '../../components/ui/Logo';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -16,10 +17,7 @@ export default function Landing() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(13,148,136,0.18),transparent_60%)]" />
 
       <div className="relative z-10 flex flex-col items-center text-center page-enter">
-        <h1 className="font-heading font-extrabold text-[56px] leading-none tracking-tight">
-          DunongAI
-        </h1>
-        <div className="mt-3 h-1 w-12 rounded bg-gold" />
+        <Logo variant="dark" className="h-20 md:h-24 w-auto" />
         <div
           className="mt-5 italic font-heading font-semibold text-gold"
           style={{ fontSize: 24 }}

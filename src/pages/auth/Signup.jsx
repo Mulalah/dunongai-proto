@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
+import Logo from '../../components/ui/Logo';
 import { db, FIREBASE_ENABLED, collection, query, where, getDocs } from '../../firebase';
 import { findSectionByCode } from '../../utils/sections';
 
@@ -136,8 +137,7 @@ export default function Signup() {
         style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0D4A4A 100%)' }}
       >
         <div>
-          <div className="font-heading font-extrabold text-3xl">DunongAI</div>
-          <div className="mt-2 h-1 w-10 rounded bg-gold" />
+          <Logo variant="dark" className="h-10 w-auto" />
           <div className="mt-3 italic text-gold font-heading font-semibold">Basahin Natin Ito!</div>
         </div>
         <p className="text-white/70 leading-relaxed text-sm max-w-xs">
