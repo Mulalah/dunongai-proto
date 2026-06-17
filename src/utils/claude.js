@@ -1,8 +1,19 @@
+import { auth } from '../firebase';
+
 // Live AI runs through the serverless proxy at /api/claude (key stays server-side).
 // Toggle with VITE_AI_ENABLED=true; otherwise the app uses curated demo fallbacks.
 const DEMO_MODE = import.meta.env.VITE_AI_ENABLED !== 'true';
 
 export const isDemoMode = () => DEMO_MODE;
+
+// Attach the signed-in user's Firebase ID token so the proxy can authorize.
+async function authHeader() {
+  try {
+    const user = auth?.currentUser;
+    if (user) return { Authorization: `Bearer ${await user.getIdToken()}` };
+  } catch {}
+  return {};
+}
 
 const FALLBACKS = {
   diagnosticLevel: { level: 3, rationale: 'Demo mode: Placed at Grade 3' },
@@ -57,7 +68,7 @@ function delay(ms) {
 async function callProxy({ system, messages, max_tokens = 1024 }) {
   const response = await fetch('/api/claude', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...(await authHeader()) },
     body: JSON.stringify({ system, messages, max_tokens })
   });
   if (!response.ok) throw new Error('Claude API error: ' + response.status);

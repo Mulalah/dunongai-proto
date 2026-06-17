@@ -3,6 +3,28 @@
 // (process.env.CLAUDE_API_KEY) never ships to the client bundle.
 
 const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5';
+const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY;
+
+// Confirm the caller holds a valid Firebase ID token for this project.
+// Uses the Identity Toolkit REST API (no Admin SDK / service account needed).
+async function verifyFirebaseToken(idToken) {
+  if (!idToken || !FIREBASE_API_KEY) return false;
+  try {
+    const r = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ idToken })
+      }
+    );
+    if (!r.ok) return false;
+    const data = await r.json();
+    return Array.isArray(data.users) && data.users.length > 0;
+  } catch {
+    return false;
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,6 +35,15 @@ export default async function handler(req, res) {
   const apiKey = process.env.CLAUDE_API_KEY;
   if (!apiKey) {
     res.status(500).json({ error: 'CLAUDE_API_KEY is not configured on the server.' });
+    return;
+  }
+
+  // Require a signed-in Firebase user so the endpoint can't be abused for free
+  // Claude usage. Demo (non-Firebase) sessions fall back to curated answers.
+  const authz = req.headers.authorization || '';
+  const idToken = authz.startsWith('Bearer ') ? authz.slice(7) : '';
+  if (!(await verifyFirebaseToken(idToken))) {
+    res.status(401).json({ error: 'Authentication required.' });
     return;
   }
 

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LEVEL_NAMES } from '../../utils/levelUtils';
@@ -12,6 +13,7 @@ const NAV = [
 export default function Sidebar() {
   const { profile, logout } = useAuth();
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const level = profile?.currentLevel || 3;
   const streak = profile?.streakDays ?? 5;
   const initials = (profile?.displayName || 'JC')
@@ -22,13 +24,26 @@ export default function Sidebar() {
     .toUpperCase();
 
   return (
-    <aside
-      className="fixed left-0 top-0 h-screen w-[260px] flex flex-col text-white"
-      style={{
-        background: 'linear-gradient(180deg, #0A1628 0%, #0D1F35 100%)',
-        borderRight: '1px solid rgba(255,255,255,0.06)'
-      }}
-    >
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className={`md:hidden fixed top-3 left-3 z-50 w-10 h-10 rounded-lg bg-navy text-white flex items-center justify-center shadow-lg ${open ? 'hidden' : ''}`}
+        aria-label="Buksan ang menu"
+      >
+        ☰
+      </button>
+      {open && (
+        <div onClick={() => setOpen(false)} className="md:hidden fixed inset-0 bg-black/40 z-40" />
+      )}
+      <aside
+        className={`fixed left-0 top-0 h-screen w-[260px] flex flex-col text-white z-40 transform transition-transform duration-200 md:translate-x-0 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{
+          background: 'linear-gradient(180deg, #0A1628 0%, #0D1F35 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.06)'
+        }}
+      >
       {/* Logo */}
       <div className="px-6 pt-7 pb-5">
         <Logo variant="dark" className="h-9 w-auto" />
@@ -41,6 +56,7 @@ export default function Sidebar() {
           <NavLink
             key={n.to}
             to={n.to}
+            onClick={() => setOpen(false)}
             className={({ isActive }) =>
               `relative flex items-center gap-3 px-4 py-3 my-1 rounded-xl text-sm font-heading font-semibold transition ${
                 isActive
@@ -106,6 +122,7 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

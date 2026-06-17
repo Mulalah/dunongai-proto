@@ -1,28 +1,30 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { db } from './firebase';
 import { seedDatabase } from './utils/seedData';
 
-import Landing from './pages/auth/Landing';
-import StudentLogin from './pages/auth/StudentLogin';
-import TeacherLogin from './pages/auth/TeacherLogin';
-import Signup from './pages/auth/Signup';
+// Code-split each page so the initial bundle stays small (faster first load
+// on weak connections).
+const Landing = lazy(() => import('./pages/auth/Landing'));
+const StudentLogin = lazy(() => import('./pages/auth/StudentLogin'));
+const TeacherLogin = lazy(() => import('./pages/auth/TeacherLogin'));
+const Signup = lazy(() => import('./pages/auth/Signup'));
 
-import DiagnosticQuiz from './pages/student/DiagnosticQuiz';
-import LevelAssigned from './pages/student/LevelAssigned';
-import StoryLibrary from './pages/student/StoryLibrary';
-import StoryReader from './pages/student/StoryReader';
-import Comprehension from './pages/student/Comprehension';
-import SessionComplete from './pages/student/SessionComplete';
-import Progress from './pages/student/Progress';
+const DiagnosticQuiz = lazy(() => import('./pages/student/DiagnosticQuiz'));
+const LevelAssigned = lazy(() => import('./pages/student/LevelAssigned'));
+const StoryLibrary = lazy(() => import('./pages/student/StoryLibrary'));
+const StoryReader = lazy(() => import('./pages/student/StoryReader'));
+const Comprehension = lazy(() => import('./pages/student/Comprehension'));
+const SessionComplete = lazy(() => import('./pages/student/SessionComplete'));
+const Progress = lazy(() => import('./pages/student/Progress'));
 
-import ClassDashboard from './pages/teacher/ClassDashboard';
-import StudentProfile from './pages/teacher/StudentProfile';
-import FlaggedStudents from './pages/teacher/FlaggedStudents';
+const ClassDashboard = lazy(() => import('./pages/teacher/ClassDashboard'));
+const StudentProfile = lazy(() => import('./pages/teacher/StudentProfile'));
+const FlaggedStudents = lazy(() => import('./pages/teacher/FlaggedStudents'));
 
-import ParentDashboard from './pages/parent/ParentDashboard';
-import Settings from './pages/Settings';
+const ParentDashboard = lazy(() => import('./pages/parent/ParentDashboard'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
@@ -62,9 +64,18 @@ function PageTransitions({ children }) {
   return <div key={location.pathname}>{children}</div>;
 }
 
+function SuspenseFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <LoadingSpinner message="Inihahanda ang DunongAI…" />
+    </div>
+  );
+}
+
 function AppRoutes() {
   return (
     <PageTransitions>
+      <Suspense fallback={<SuspenseFallback />}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login/student" element={<StudentLogin />} />
@@ -173,6 +184,7 @@ function AppRoutes() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </PageTransitions>
   );
 }

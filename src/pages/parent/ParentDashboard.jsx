@@ -5,6 +5,7 @@ import BadgeCard from '../../components/student/BadgeCard';
 import ScoreTrendChart from '../../components/teacher/ScoreTrendChart';
 import { useAuth } from '../../context/AuthContext';
 import Logo from '../../components/ui/Logo';
+import VerifyBanner from '../../components/layout/VerifyBanner';
 import { BADGES, LEVEL_NAMES, computeUnlockedBadges } from '../../utils/levelUtils';
 import {
   db,
@@ -125,6 +126,8 @@ export default function ParentDashboard() {
           </div>
         </div>
       </div>
+
+      <VerifyBanner />
 
       <div className="max-w-[1100px] mx-auto px-8 py-8 page-enter">
         <h1 className="font-heading font-extrabold text-navy text-2xl">

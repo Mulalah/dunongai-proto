@@ -10,7 +10,20 @@ import {
   LEVEL_NAMES
 } from '../../utils/levelUtils';
 import { useAuth } from '../../context/AuthContext';
-import { db, FIREBASE_ENABLED, addDoc, collection, Timestamp } from '../../firebase';
+import { db, FIREBASE_ENABLED, addDoc, collection, doc, getDoc, setDoc, Timestamp } from '../../firebase';
+
+// Streak: same day keeps it, consecutive day +1, a gap resets to 1.
+function computeStreak(prevStreak, lastActiveDate) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (!lastActiveDate) return 1;
+  const last = lastActiveDate.toDate ? lastActiveDate.toDate() : new Date(lastActiveDate);
+  last.setHours(0, 0, 0, 0);
+  const diff = Math.round((today - last) / 86400000);
+  if (diff <= 0) return prevStreak || 1;
+  if (diff === 1) return (prevStreak || 0) + 1;
+  return 1;
+}
 
 function LevelBanner({ adjustment, currentLevel }) {
   if (adjustment === 'advance') {
@@ -62,25 +75,67 @@ export default function SessionComplete() {
     setResults(data);
     setTimeout(() => setRevealed(true), 80);
 
-    // Persist session (only when Firebase is configured)
+    // Derive the new standing from this session.
+    const sc = data.score ?? 0;
+    const st = getStarsFromScore(sc);
+    const cur = profile?.currentLevel || data.level || 3;
+    const newLevel = shouldAdvance(sc)
+      ? Math.min(cur + 1, 6)
+      : shouldStepBack(sc)
+      ? Math.max(cur - 1, 1)
+      : cur;
+    const status = sc < 50 ? 'flagged' : sc < 70 ? 'improving' : 'on-track';
+    const recentScores = [...(profile?.recentScores || []).slice(-2), sc];
+    const streakDays = computeStreak(profile?.streakDays, profile?.lastActiveDate);
+
+    // Update the student's own record (local + Firestore for real accounts).
+    // This is what powers the teacher dashboard, leaderboard, and parent view.
+    updateProfile({
+      currentLevel: newLevel,
+      lastScore: sc,
+      recentScores,
+      streakDays,
+      status,
+      lastActiveDate: Timestamp.now()
+    });
+
     if (FIREBASE_ENABLED) {
+      const uid = profile?.uid || 'demo-student-001';
       (async () => {
         try {
           await addDoc(collection(db, 'sessions'), {
-            studentId: profile?.uid || 'demo-student-001',
+            studentId: uid,
             studentName: profile?.displayName || 'Juan dela Cruz',
             storyId: data.storyId,
             storyTitle: data.storyTitle,
             level: data.level,
-            score: data.score,
-            stars: getStarsFromScore(data.score),
+            score: sc,
+            stars: st,
             durationSec: data.durationSec || 0,
             completedAt: Timestamp.now()
           });
         } catch {}
+        try {
+          const progRef = doc(db, 'progress', uid);
+          const snap = await getDoc(progRef);
+          const prev = snap.exists() ? snap.data() : {};
+          await setDoc(
+            progRef,
+            {
+              uid,
+              currentLevel: newLevel,
+              totalStoriesCompleted: (prev.totalStoriesCompleted || 0) + 1,
+              totalStars: (prev.totalStars || 0) + st,
+              streakDays,
+              lastActiveDate: Timestamp.now()
+            },
+            { merge: true }
+          );
+        } catch {}
       })();
     }
-  }, [navigate, profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const score = results?.score ?? 0;
   const stars = getStarsFromScore(score);
@@ -92,16 +147,6 @@ export default function SessionComplete() {
 
   const currentLevel = profile?.currentLevel || 3;
   const newBadgeUnlocked = adjustment === 'advance';
-
-  useEffect(() => {
-    if (!results) return;
-    if (adjustment === 'advance') {
-      updateProfile({ currentLevel: Math.min(currentLevel + 1, 6) });
-    } else if (adjustment === 'stepback') {
-      updateProfile({ currentLevel: Math.max(currentLevel - 1, 1) });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results, adjustment]);
 
   if (!results) return null;
 

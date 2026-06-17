@@ -59,6 +59,19 @@ export default function StoryLibrary() {
     setJoinMsg(null);
   }
 
+  function leaveSection(section) {
+    if (!window.confirm(`Umalis sa "${section.name}"? Hindi mo na makikita ang mga kwento nito.`)) return;
+    const remaining = joinedIds.filter((id) => id !== section.id);
+    const patch = { sectionIds: remaining };
+    if (profile?.sectionId === section.id) {
+      const next = joinedSections.find((s) => s.id === remaining[0]);
+      patch.sectionId = remaining[0] || null;
+      patch.teacherId = next?.teacherId || null;
+    }
+    updateProfile(patch);
+    setJoinMsg(null);
+  }
+
   async function handleJoinSection(e) {
     e.preventDefault();
     if (!joinCode.trim()) return;
@@ -235,17 +248,29 @@ export default function StoryLibrary() {
             {joinedSections.map((s) => {
               const active = s.id === profile?.sectionId;
               return (
-                <button
-                  key={s.id}
-                  onClick={() => switchSection(s)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-heading font-semibold transition ${
-                    active
-                      ? 'bg-gradient-to-r from-teal to-teal-600 text-white shadow-glow-teal'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {s.name} {active && '✓'}
-                </button>
+                <span key={s.id} className="inline-flex items-center rounded-full overflow-hidden">
+                  <button
+                    onClick={() => switchSection(s)}
+                    className={`px-3 py-1.5 text-sm font-heading font-semibold transition ${
+                      active
+                        ? 'bg-gradient-to-r from-teal to-teal-600 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {s.name} {active && '✓'}
+                  </button>
+                  <button
+                    onClick={() => leaveSection(s)}
+                    title="Umalis sa section"
+                    className={`px-2 py-1.5 text-sm transition ${
+                      active
+                        ? 'bg-teal-700 text-white/80 hover:text-white'
+                        : 'bg-slate-200 text-slate-400 hover:text-red-500'
+                    }`}
+                  >
+                    ✕
+                  </button>
+                </span>
               );
             })}
             <span className="text-xs text-slate-400">

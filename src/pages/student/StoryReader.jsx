@@ -94,9 +94,9 @@ export default function StoryReader() {
   return (
     <div className="min-h-screen flex bg-[#F8FAFC]">
       <Sidebar />
-      <main className="flex-1 ml-[260px] flex flex-col min-h-screen">
+      <main className="flex-1 md:ml-[260px] flex flex-col min-h-screen">
         {/* Custom top bar */}
-        <div className="h-14 bg-navy text-white flex items-center justify-between px-5 sticky top-0 z-30">
+        <div className="h-14 bg-navy text-white flex items-center justify-between pl-16 pr-4 md:px-5 sticky top-0 z-30">
           <button
             onClick={() => navigate('/student/library')}
             className="flex items-center gap-2 text-sm font-heading font-semibold text-white/80 hover:text-white"
@@ -109,7 +109,7 @@ export default function StoryReader() {
           <div className="text-xs text-white/70 tabular-nums">⏱ {formatTime(seconds)}</div>
         </div>
 
-        <div className="flex-1 flex">
+        <div className="flex-1 flex flex-col lg:flex-row">
           {/* Reading panel */}
           <div className="flex-1 bg-white overflow-y-auto">
             <div className="px-14 py-12 max-w-[760px] mx-auto">
