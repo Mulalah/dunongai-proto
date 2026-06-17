@@ -6,7 +6,7 @@ import Logo from '../../components/ui/Logo';
 
 export default function StudentLogin() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const [email, setEmail] = useState('student@dunongai.ph');
   const [password, setPassword] = useState('dunong123');
   const [showPw, setShowPw] = useState(false);
@@ -19,6 +19,16 @@ export default function StudentLogin() {
     setLoading(true);
     try {
       const profile = await login(email, password);
+      // This portal is for students (and parents). Teachers must use their own.
+      if (profile?.role === 'teacher') {
+        await logout();
+        setErr('Account ng guro ito. Mag-login sa "Mag-login bilang Guro".');
+        return;
+      }
+      if (profile?.role === 'parent') {
+        navigate('/parent/dashboard');
+        return;
+      }
       // No section yet → join first (library shows the join prompt, no stories).
       // In a section but no diagnostic → take it once. Otherwise → library.
       const dest = !profile?.sectionId

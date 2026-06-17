@@ -106,15 +106,23 @@ export default function ParentDashboard() {
             <Logo variant="dark" className="h-8 w-auto" />
             <div className="text-white/60 text-sm mt-1">Dashboard ng Magulang</div>
           </div>
-          <button
-            onClick={async () => {
-              await logout();
-              navigate('/');
-            }}
-            className="text-sm text-white/70 hover:text-white border border-white/20 rounded-lg px-4 py-2 transition"
-          >
-            Mag-logout
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/settings')}
+              className="text-sm text-white/70 hover:text-white border border-white/20 rounded-lg px-4 py-2 transition"
+            >
+              ⚙️ Settings
+            </button>
+            <button
+              onClick={async () => {
+                await logout();
+                navigate('/');
+              }}
+              className="text-sm text-white/70 hover:text-white border border-white/20 rounded-lg px-4 py-2 transition"
+            >
+              Mag-logout
+            </button>
+          </div>
         </div>
       </div>
 

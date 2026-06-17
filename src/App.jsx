@@ -22,6 +22,7 @@ import StudentProfile from './pages/teacher/StudentProfile';
 import FlaggedStudents from './pages/teacher/FlaggedStudents';
 
 import ParentDashboard from './pages/parent/ParentDashboard';
+import Settings from './pages/Settings';
 
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
@@ -157,6 +158,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute role="parent">
               <ParentDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

@@ -5,7 +5,8 @@ import Logo from '../ui/Logo';
 
 const NAV = [
   { to: '/teacher/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/teacher/flagged', label: 'Kailangan ng Tulong', icon: '⚠️' }
+  { to: '/teacher/flagged', label: 'Kailangan ng Tulong', icon: '⚠️' },
+  { to: '/settings', label: 'Settings', icon: '⚙️' }
 ];
 
 export default function TeacherSidebar() {

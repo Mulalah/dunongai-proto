@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button';
 
 export default function TeacherLogin() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const [email, setEmail] = useState('teacher@dunongai.ph');
   const [password, setPassword] = useState('dunong123');
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,12 @@ export default function TeacherLogin() {
     setErr('');
     setLoading(true);
     try {
-      await login(email, password);
+      const profile = await login(email, password);
+      if (profile?.role !== 'teacher') {
+        await logout();
+        setErr('Hindi ito account ng guro. Mag-login sa "Mag-login bilang Estudyante".');
+        return;
+      }
       navigate('/teacher/dashboard');
     } catch (e2) {
       setErr(e2.message || 'Hindi tumugma ang email/password.');

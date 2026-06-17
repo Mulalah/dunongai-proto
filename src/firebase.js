@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  updatePassword,
   signOut
 } from 'firebase/auth';
 import {
@@ -66,6 +67,7 @@ export {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  updatePassword,
   signOut,
   doc,
   getDoc,

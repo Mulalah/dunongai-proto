@@ -5,7 +5,8 @@ import Logo from '../ui/Logo';
 
 const NAV = [
   { to: '/student/library', label: 'Mga Kwento', icon: '📚' },
-  { to: '/student/progress', label: 'Progreso', icon: '⭐' }
+  { to: '/student/progress', label: 'Progreso', icon: '⭐' },
+  { to: '/settings', label: 'Settings', icon: '⚙️' }
 ];
 
 export default function Sidebar() {

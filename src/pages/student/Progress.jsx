@@ -53,46 +53,41 @@ export default function Progress() {
         if (!cancelled) setSessions([]);
       }
 
-      // Leaderboard scoped to the student's own section (no cross-section overlap).
-      // Falls back to the whole class only if the student has no section yet.
+      // Leaderboard = real members of the student's active section only.
+      // The demo student keeps a populated sample board for the showcase.
+      const isDemoStudent = (profile?.uid || 'demo-student-001') === 'demo-student-001';
       try {
-        const scope = profile?.sectionId
-          ? where('sectionId', '==', profile.sectionId)
-          : where('teacherId', '==', profile?.teacherId || 'demo-teacher-001');
-        const tSnap = await getDocs(query(collection(db, 'users'), scope));
-        const all = tSnap.docs.map((d) => ({ uid: d.id, ...d.data() }));
-        // Add current student
-        all.push({
-          uid: profile?.uid || 'demo-student-001',
-          displayName: profile?.displayName || 'Juan dela Cruz',
-          stars: 24
-        });
-        // Use seed if empty
-        const list = all.length
-          ? all.map((s) => ({
-              uid: s.uid,
-              name: s.displayName,
-              stars:
-                s.uid === (profile?.uid || 'demo-student-001')
-                  ? 24
-                  : Math.round((s.lastScore || 60) / 4) + (s.streakDays || 0)
-            }))
-          : SEED_CLASS_STUDENTS.map((s) => ({
-              uid: s.id,
-              name: s.displayName,
-              stars: Math.round(s.lastScore / 4) + s.streak
-            }));
-
-        list.sort((a, b) => b.stars - a.stars);
-        if (!cancelled) setLeaderboard(list.slice(0, 5));
+        if (isDemoStudent) {
+          const list = SEED_CLASS_STUDENTS.map((s) => ({
+            uid: s.id,
+            name: s.displayName,
+            stars: Math.round(s.lastScore / 4) + s.streak
+          }));
+          list.push({ uid: 'demo-student-001', name: profile?.displayName || 'Juan dela Cruz', stars: 24 });
+          list.sort((a, b) => b.stars - a.stars);
+          if (!cancelled) setLeaderboard(list.slice(0, 5));
+          return;
+        }
+        if (!profile?.sectionId) {
+          if (!cancelled) setLeaderboard([]);
+          return;
+        }
+        const tSnap = await getDocs(
+          query(collection(db, 'users'), where('sectionId', '==', profile.sectionId))
+        );
+        const list = tSnap.docs
+          .map((d) => {
+            const s = d.data();
+            return {
+              uid: d.id,
+              name: s.displayName || 'Estudyante',
+              stars: Math.round((s.lastScore || 0) / 4) + (s.streakDays || 0)
+            };
+          })
+          .sort((a, b) => b.stars - a.stars);
+        if (!cancelled) setLeaderboard(list.slice(0, 10));
       } catch {
-        const list = SEED_CLASS_STUDENTS.map((s) => ({
-          uid: s.id,
-          name: s.displayName,
-          stars: Math.round(s.lastScore / 4) + s.streak
-        }));
-        list.sort((a, b) => b.stars - a.stars);
-        if (!cancelled) setLeaderboard(list.slice(0, 5));
+        if (!cancelled) setLeaderboard([]);
       }
     }
     load();
