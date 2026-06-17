@@ -83,6 +83,7 @@ export default function Signup() {
         gradeLevel: level,
         currentLevel: level,
         sectionId: section?.id || null,
+        sectionIds: section ? [section.id] : [],
         teacherId: section?.teacherId || null,
         hasCompletedDiagnostic: false
       };

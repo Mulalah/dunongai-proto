@@ -13,7 +13,9 @@ import {
 } from '../firebase';
 
 // Sections let a teacher group students. Students join with a short code;
-// teachers can own several sections and switch between them.
+// teachers can own several sections and switch between them. Students may
+// belong to several sections too (capped below) and switch their active one.
+export const MAX_SECTIONS = 3;
 
 // Demo sections used when Firebase is not configured.
 export const DEMO_SECTIONS = [
@@ -77,6 +79,21 @@ export async function getSectionById(sectionId) {
   }
   const snap = await getDoc(doc(db, 'sections', sectionId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// Resolve metadata (name, teacherId) for a list of section ids — for the
+// student's section switcher.
+export async function getSectionsByIds(ids = []) {
+  const out = [];
+  for (const id of ids) {
+    try {
+      const s = await getSectionById(id);
+      out.push(s ? { ...s, id } : { id, name: id });
+    } catch {
+      out.push({ id, name: id });
+    }
+  }
+  return out;
 }
 
 // Set which stories are available to a section.

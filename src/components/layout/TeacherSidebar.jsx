@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Logo from '../ui/Logo';
@@ -10,6 +11,17 @@ const NAV = [
 export default function TeacherSidebar() {
   const { profile, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Mirror the active section selected on the dashboard.
+  const [activeName, setActiveName] = useState('');
+  useEffect(() => {
+    const key = `dunong_active_section_name_${profile?.uid}`;
+    setActiveName(localStorage.getItem(key) || '');
+    const onChange = (e) => setActiveName(e?.detail || localStorage.getItem(key) || '');
+    window.addEventListener('dunong:activesection', onChange);
+    return () => window.removeEventListener('dunong:activesection', onChange);
+  }, [profile?.uid]);
+
   const initials = (profile?.displayName || 'AR')
     .split(' ')
     .map((s) => s[0])
@@ -59,7 +71,7 @@ export default function TeacherSidebar() {
       <div className="mx-3 mb-2 p-4 rounded-xl bg-white/5 border border-white/10">
         <div className="text-[10px] uppercase tracking-wide text-white/50 mb-1">Aking Klase</div>
         <div className="inline-block px-3 py-1 rounded-full bg-teal/20 text-teal-100 text-xs font-semibold">
-          {profile?.className || 'Grade 3 - Rizal'}
+          {activeName || profile?.className || 'Klase'}
         </div>
       </div>
 

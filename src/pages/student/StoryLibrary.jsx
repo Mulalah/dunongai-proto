@@ -6,7 +6,7 @@ import StoryCard from '../../components/student/StoryCard';
 import Badge from '../../components/ui/Badge';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
-import { joinSection, getSectionById } from '../../utils/sections';
+import { findSectionByCode, getSectionById, getSectionsByIds, MAX_SECTIONS } from '../../utils/sections';
 import { getAllStories } from '../../utils/stories';
 
 const FILTERS = [
@@ -32,6 +32,32 @@ export default function StoryLibrary() {
   const [joinCode, setJoinCode] = useState('');
   const [joinMsg, setJoinMsg] = useState(null); // { ok, text }
   const [joining, setJoining] = useState(false);
+  const [joinedSections, setJoinedSections] = useState([]);
+
+  // The sections this student belongs to (sectionIds[], with sectionId as active).
+  const joinedIds = profile?.sectionIds?.length
+    ? profile.sectionIds
+    : profile?.sectionId
+    ? [profile.sectionId]
+    : [];
+
+  // Load names/teacher for the switcher.
+  useEffect(() => {
+    let cancelled = false;
+    getSectionsByIds(joinedIds).then((list) => {
+      if (!cancelled) setJoinedSections(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joinedIds.join(',')]);
+
+  function switchSection(section) {
+    if (section.id === profile?.sectionId) return;
+    updateProfile({ sectionId: section.id, teacherId: section.teacherId });
+    setJoinMsg(null);
+  }
 
   async function handleJoinSection(e) {
     e.preventDefault();
@@ -39,10 +65,25 @@ export default function StoryLibrary() {
     setJoining(true);
     setJoinMsg(null);
     try {
-      const section = await joinSection(profile?.uid, joinCode);
-      updateProfile({ sectionId: section.id, teacherId: section.teacherId });
+      const section = await findSectionByCode(joinCode);
+      if (!section) {
+        throw new Error('Walang nahanap na section para sa code na iyon. Pakisuri sa iyong guro.');
+      }
       setJoinCode('');
-      // First time joining → take the placement quiz once.
+
+      // Already a member → just switch to it.
+      if (joinedIds.includes(section.id)) {
+        updateProfile({ sectionId: section.id, teacherId: section.teacherId });
+        setJoinMsg({ ok: true, text: `Nasa "${section.name}" ka na — inilipat dito.` });
+        return;
+      }
+      if (joinedIds.length >= MAX_SECTIONS) {
+        throw new Error(`Hanggang ${MAX_SECTIONS} section lang muna ang puwedeng salihan.`);
+      }
+
+      const sectionIds = [...joinedIds, section.id];
+      updateProfile({ sectionIds, sectionId: section.id, teacherId: section.teacherId });
+      // First section ever → take the placement quiz once.
       if (!profile?.hasCompletedDiagnostic) {
         navigate('/student/quiz');
         return;
@@ -136,7 +177,7 @@ export default function StoryLibrary() {
   const streak = profile?.streakDays ?? 5;
 
   // New students must join a section first — no stories shown until then.
-  if (profile && !profile.sectionId) {
+  if (profile && joinedIds.length === 0) {
     return (
       <PageWrapper role="student">
         <TopBar title="Maligayang pagdating! 🎒" subtitle="Sumali muna sa iyong section" />
@@ -187,30 +228,56 @@ export default function StoryLibrary() {
       />
 
       <div className="p-8 page-enter">
-        {/* Join a section */}
-        <div className="mb-5 bg-white rounded-2xl shadow-card p-4 flex flex-wrap items-center gap-3">
-          <span className="text-sm text-navy font-heading font-semibold">
-            {profile?.sectionId ? 'Sumali sa ibang section?' : 'May section code mula sa iyong guro?'}
-          </span>
-          <form onSubmit={handleJoinSection} className="flex items-center gap-2">
-            <input
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder="SECTION CODE"
-              className="h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono tracking-widest focus:border-teal focus:outline-none"
-            />
-            <button
-              type="submit"
-              disabled={joining}
-              className="h-10 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-600 text-white text-sm font-heading font-bold btn-press disabled:opacity-60"
-            >
-              {joining ? '…' : 'Sumali'}
-            </button>
-          </form>
-          {joinMsg && (
-            <span className={`text-sm ${joinMsg.ok ? 'text-emerald-600' : 'text-red-600'}`}>
-              {joinMsg.text}
+        {/* My sections — switch active section (drives stories + leaderboard) */}
+        <div className="mb-5 bg-white rounded-2xl shadow-card p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-navy font-heading font-semibold mr-1">Mga Section ko:</span>
+            {joinedSections.map((s) => {
+              const active = s.id === profile?.sectionId;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => switchSection(s)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-heading font-semibold transition ${
+                    active
+                      ? 'bg-gradient-to-r from-teal to-teal-600 text-white shadow-glow-teal'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {s.name} {active && '✓'}
+                </button>
+              );
+            })}
+            <span className="text-xs text-slate-400">
+              ({joinedIds.length}/{MAX_SECTIONS})
             </span>
+          </div>
+
+          {joinedIds.length < MAX_SECTIONS ? (
+            <form onSubmit={handleJoinSection} className="mt-3 flex flex-wrap items-center gap-2">
+              <input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                placeholder="SUMALI SA BAGONG SECTION (CODE)"
+                className="h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono tracking-widest focus:border-teal focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={joining}
+                className="h-10 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-600 text-white text-sm font-heading font-bold btn-press disabled:opacity-60"
+              >
+                {joining ? '…' : 'Sumali'}
+              </button>
+              {joinMsg && (
+                <span className={`text-sm ${joinMsg.ok ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {joinMsg.text}
+                </span>
+              )}
+            </form>
+          ) : (
+            <div className="mt-2 text-xs text-slate-400">
+              Umabot ka na sa {MAX_SECTIONS} na section (ang pinakamarami sa ngayon).
+            </div>
           )}
         </div>
 

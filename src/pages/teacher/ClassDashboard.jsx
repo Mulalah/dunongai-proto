@@ -33,6 +33,7 @@ export default function ClassDashboard() {
   const [sortDir, setSortDir] = useState('asc');
 
   const teacherId = profile?.uid || 'demo-teacher-001';
+  const isDemoTeacher = teacherId === 'demo-teacher-001';
   const [sections, setSections] = useState([]);
   const [activeSectionId, setActiveSectionId] = useState('');
   const [creating, setCreating] = useState(false);
@@ -77,6 +78,13 @@ export default function ClassDashboard() {
 
   const activeSection = sections.find((s) => s.id === activeSectionId) || null;
 
+  // Broadcast the active section name so the sidebar's "Aking Klase" matches.
+  useEffect(() => {
+    if (!activeSection) return;
+    localStorage.setItem(`dunong_active_section_name_${teacherId}`, activeSection.name);
+    window.dispatchEvent(new CustomEvent('dunong:activesection', { detail: activeSection.name }));
+  }, [activeSection, teacherId]);
+
   // Load this teacher's sections; restore last-selected from localStorage.
   useEffect(() => {
     let cancelled = false;
@@ -112,9 +120,11 @@ export default function ClassDashboard() {
           : where('teacherId', '==', teacherId);
         const snap = await getDocs(query(collection(db, 'users'), constraints));
         const arr = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
-        if (!cancelled) setStudents(arr.length ? arr : seedFallback());
+        // Real teachers see exactly their real students (even if 0). Only the
+        // demo teacher falls back to the sample roster so the demo looks alive.
+        if (!cancelled) setStudents(arr.length ? arr : isDemoTeacher ? seedFallback() : []);
       } catch {
-        if (!cancelled) setStudents(seedFallback());
+        if (!cancelled) setStudents(isDemoTeacher ? seedFallback() : []);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -293,7 +303,7 @@ export default function ClassDashboard() {
   return (
     <PageWrapper role="teacher">
       <TopBar
-        title={`${profile?.className || 'Grade 3 - Rizal'} Dashboard`}
+        title={`${activeSection?.name || profile?.className || 'Klase'} Dashboard`}
         subtitle={profile?.displayName || "Ma'am Ana Reyes"}
       />
       <div className="p-8 page-enter">

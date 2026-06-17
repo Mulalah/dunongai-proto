@@ -24,6 +24,7 @@ const DEMO_PROFILES = {
     email: 'student@dunongai.ph',
     teacherId: 'demo-teacher-001',
     sectionId: 'demo-section-rizal',
+    sectionIds: ['demo-section-rizal', 'demo-section-bonifacio'],
     gradeLevel: 3,
     currentLevel: 3,
     streakDays: 5,
