@@ -8,14 +8,17 @@ import {
   ReferenceLine,
   CartesianGrid
 } from 'recharts';
+import Icon from '../ui/Icon';
 
 export default function ScoreTrendChart({ sessions = [] }) {
   if (!sessions || sessions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500">
-        <div className="text-4xl mb-2">📊</div>
-        <div className="font-heading font-semibold">Wala pang sapat na data</div>
-        <div className="text-xs mt-1">Magpakita kapag may 2+ sessions ang estudyante.</div>
+        <div className="w-14 h-14 mb-3 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center">
+          <Icon name="chartBar" size={26} />
+        </div>
+        <div className="font-heading font-semibold text-navy">Wala pang sapat na data</div>
+        <div className="text-xs mt-1">Magpapakita kapag may 2+ sessions ang estudyante.</div>
       </div>
     );
   }

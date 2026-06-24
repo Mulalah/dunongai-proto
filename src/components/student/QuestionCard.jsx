@@ -1,3 +1,5 @@
+import Icon from '../ui/Icon';
+
 export default function QuestionCard({
   question,
   questionNumber,
@@ -8,7 +10,7 @@ export default function QuestionCard({
   const isMC = question.type === 'mc';
 
   return (
-    <div className="bg-white rounded-2xl shadow-card p-7 page-enter">
+    <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-7 page-enter">
       <div className="flex items-center justify-between mb-5">
         <div className="text-xs uppercase tracking-wide text-teal font-bold">
           Tanong {questionNumber} ng {total}
@@ -32,7 +34,7 @@ export default function QuestionCard({
                 onClick={() => onAnswer(opt)}
                 className={`w-full text-left px-5 py-4 rounded-xl border-2 font-heading font-semibold transition btn-press ${
                   selected
-                    ? 'border-teal bg-gradient-to-r from-teal to-teal-600 text-white shadow-glow-teal'
+                    ? 'border-teal bg-teal text-white'
                     : 'border-slate-200 bg-white text-navy hover:border-teal/50 hover:bg-teal/5'
                 }`}
               >
@@ -44,7 +46,7 @@ export default function QuestionCard({
                         : 'bg-slate-100 text-slate-500'
                     }`}
                   >
-                    {selected ? '✓' : String.fromCharCode(65 + i)}
+                    {selected ? <Icon name="check" size={16} strokeWidth={2.5} /> : String.fromCharCode(65 + i)}
                   </span>
                   <span>{opt}</span>
                 </div>

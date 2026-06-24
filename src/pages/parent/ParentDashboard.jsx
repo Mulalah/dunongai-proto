@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/ui/StatCard';
 import BadgeCard from '../../components/student/BadgeCard';
 import ScoreTrendChart from '../../components/teacher/ScoreTrendChart';
+import WeeklyRecapCard from '../../components/parent/WeeklyRecapCard';
 import { useAuth } from '../../context/AuthContext';
 import Logo from '../../components/ui/Logo';
+import Icon from '../../components/ui/Icon';
 import VerifyBanner from '../../components/layout/VerifyBanner';
 import { BADGES, LEVEL_NAMES, computeUnlockedBadges } from '../../utils/levelUtils';
 import {
@@ -96,10 +98,10 @@ export default function ParentDashboard() {
   const recent = sessions.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-[#f4f6f9]">
       {/* Header */}
       <div
-        className="text-white px-8 py-6"
+        className="on-dark text-white px-5 sm:px-8 py-6"
         style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0D4A4A 100%)' }}
       >
         <div className="max-w-[1100px] mx-auto flex items-center justify-between">
@@ -110,9 +112,9 @@ export default function ParentDashboard() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/settings')}
-              className="text-sm text-white/70 hover:text-white border border-white/20 rounded-lg px-4 py-2 transition"
+              className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white border border-white/20 rounded-lg px-4 py-2 transition"
             >
-              ⚙️ Settings
+              <Icon name="settings" size={16} /> Settings
             </button>
             <button
               onClick={async () => {
@@ -129,7 +131,7 @@ export default function ParentDashboard() {
 
       <VerifyBanner />
 
-      <div className="max-w-[1100px] mx-auto px-8 py-8 page-enter">
+      <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-8 page-enter">
         <h1 className="font-heading font-extrabold text-navy text-2xl">
           Pag-unlad ni {childName} 📚
         </h1>
@@ -137,29 +139,36 @@ export default function ParentDashboard() {
           Kasalukuyang nasa {LEVEL_NAMES[p.currentLevel || 3]}
         </p>
 
+        {/* Weekly recap */}
+        {!loading && (
+          <div className="mt-6">
+            <WeeklyRecapCard sessions={sessions} progress={p} childName={childName} />
+          </div>
+        )}
+
         {/* Stat cards */}
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon="📖" label="Antas" value={p.currentLevel || 3} color="teal" loading={loading} />
-          <StatCard icon="⭐" label="Bituin" value={p.totalStars ?? 0} color="gold" loading={loading} />
+          <StatCard icon="bookOpen" label="Antas sa Pagbasa" value={p.currentLevel || 3} color="teal" loading={loading} />
+          <StatCard icon="star" label="Bituin" value={p.totalStars ?? 0} color="gold" loading={loading} />
           <StatCard
-            icon="📚"
+            icon="book"
             label="Kwentong Tapos"
             value={p.totalStoriesCompleted ?? sessions.length}
             color="navy"
             loading={loading}
           />
-          <StatCard icon="🔥" label="Araw na Sunod" value={p.streakDays ?? 0} color="red" loading={loading} />
+          <StatCard icon="flame" label="Araw na Sunod" value={p.streakDays ?? 0} color="red" loading={loading} />
         </div>
 
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Trend */}
-          <div className="lg:col-span-3 bg-white rounded-2xl shadow-card p-6">
+          <div className="lg:col-span-3 bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
             <h3 className="font-heading font-bold text-navy text-lg mb-4">Takbo ng mga Score</h3>
             <ScoreTrendChart sessions={sessions} />
           </div>
 
           {/* Recent */}
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-card p-6">
+          <div className="lg:col-span-2 bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
             <h3 className="font-heading font-bold text-navy text-lg mb-4">Mga Kamakailang Aktibidad</h3>
             <div className="space-y-3">
               {recent.map((s) => (
@@ -167,16 +176,16 @@ export default function ParentDashboard() {
                   key={s.id}
                   className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal to-emerald-400 flex items-center justify-center text-white">
-                    📖
+                  <div className="w-9 h-9 rounded-lg bg-teal/10 text-teal flex items-center justify-center">
+                    <Icon name="bookOpen" size={18} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-heading font-semibold text-sm text-navy truncate">
                       {s.storyTitle}
                     </div>
                   </div>
-                  <div className="text-sm font-heading font-bold text-teal">{s.score}%</div>
-                  <div className="text-gold text-sm">{'★'.repeat(s.stars || 1)}</div>
+                  <div className="text-sm font-heading font-bold text-teal tabular-nums">{s.score}%</div>
+                  <div className="text-gold text-sm tracking-tight">{'★'.repeat(s.stars || 1)}</div>
                 </div>
               ))}
               {!recent.length && !loading && (
@@ -187,7 +196,7 @@ export default function ParentDashboard() {
         </div>
 
         {/* Badges */}
-        <div className="mt-6 bg-white rounded-2xl shadow-card p-6">
+        <div className="mt-6 bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="font-heading font-bold text-navy text-lg">Mga Badge ni {childName} 🏆</h3>
             <span className="text-xs text-slate-500">

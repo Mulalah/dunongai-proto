@@ -23,7 +23,7 @@ export default function LevelAssigned() {
         >
           <div className="text-center">
             <div className="text-[10px] uppercase tracking-wider text-navy/60 font-bold">
-              Antas
+              Pagbasa
             </div>
             <div className="font-heading font-extrabold text-5xl text-navy leading-none">
               {level}
@@ -38,10 +38,10 @@ export default function LevelAssigned() {
           Ikaw ay nasa {LEVEL_NAMES[level]}! 🎉
         </h1>
         <div className="mt-2 text-teal font-heading font-semibold">
-          Grade {level} Reader · Napakagaling!
+          Antas sa Pagbasa {level} · Napakagaling!
         </div>
         <p className="mt-4 text-slate-600 max-w-md mx-auto leading-relaxed">
-          Magsimula na tayong magbasa ng mga kwento para sa iyong antas. Aalisin natin ang
+          Magsimula na tayong magbasa ng mga kwento para sa iyong antas sa pagbasa. Aalisin natin ang
           paghihirap at gagawin nating masaya ang pagbabasa.
         </p>
 

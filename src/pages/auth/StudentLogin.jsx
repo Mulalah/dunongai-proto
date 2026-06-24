@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Logo from '../../components/ui/Logo';
+import Icon from '../../components/ui/Icon';
 
 export default function StudentLogin() {
   const navigate = useNavigate();
@@ -77,23 +78,27 @@ export default function StudentLogin() {
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">👤</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <Icon name="user" size={18} />
+              </span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="LRN o Email"
-                className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-teal focus:bg-white focus:outline-none transition"
+                className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:bg-white focus:outline-none transition"
               />
             </div>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔒</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <Icon name="lock" size={18} />
+              </span>
               <input
                 type={showPw ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                className="w-full h-12 pl-10 pr-12 rounded-xl border border-slate-200 bg-slate-50 focus:border-teal focus:bg-white focus:outline-none transition"
+                className="w-full h-12 pl-11 pr-12 rounded-xl border border-slate-200 bg-slate-50 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:bg-white focus:outline-none transition"
               />
               <button
                 type="button"

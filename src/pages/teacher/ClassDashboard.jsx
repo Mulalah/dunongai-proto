@@ -4,8 +4,12 @@ import PageWrapper from '../../components/layout/PageWrapper';
 import TopBar from '../../components/layout/TopBar';
 import StatCard from '../../components/ui/StatCard';
 import Button from '../../components/ui/Button';
+import Icon from '../../components/ui/Icon';
 import StudentRow from '../../components/teacher/StudentRow';
+import ClassInsights from '../../components/teacher/ClassInsights';
 import { useAuth } from '../../context/AuthContext';
+import { deriveStatus } from '../../utils/insights';
+import { exportRosterCsv } from '../../utils/exportCsv';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where } from '../../firebase';
 import { SEED_CLASS_STUDENTS } from '../../utils/seedData';
 import {
@@ -254,7 +258,14 @@ export default function ClassDashboard() {
     }));
   }
 
-  const flaggedCount = students.filter((s) => s.status === 'flagged').length;
+  // Attach a *computed* status to every student (overriding any static seed
+  // value) so the tabs, counts, and rows all reflect real performance.
+  const studentsScored = useMemo(
+    () => students.map((s) => ({ ...s, status: deriveStatus(s).status })),
+    [students]
+  );
+
+  const flaggedCount = studentsScored.filter((s) => s.status === 'flagged').length;
   const avgLevel =
     students.length > 0
       ? (
@@ -264,7 +275,7 @@ export default function ClassDashboard() {
   const activeToday = students.filter((s) => (s.streakDays || 0) > 0).length;
 
   const filtered = useMemo(() => {
-    let arr = students;
+    let arr = studentsScored;
     if (tab !== 'all') arr = arr.filter((s) => s.status === tab);
     return [...arr].sort((a, b) => {
       let cmp = 0;
@@ -280,7 +291,7 @@ export default function ClassDashboard() {
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
-  }, [students, tab, sortKey, sortDir]);
+  }, [studentsScored, tab, sortKey, sortDir]);
 
   function header(label, key) {
     const active = sortKey === key;
@@ -306,9 +317,18 @@ export default function ClassDashboard() {
         title={`${activeSection?.name || profile?.className || 'Klase'} Dashboard`}
         subtitle={profile?.displayName || "Ma'am Ana Reyes"}
       />
-      <div className="p-8 page-enter">
+      <div className="p-4 sm:p-6 lg:p-8 page-enter">
+        {/* Report header (print only) */}
+        <div className="print-only mb-5">
+          <div className="text-2xl font-bold text-navy">DunongAI — Ulat ng Klase</div>
+          <div className="text-sm text-slate-600">
+            {(activeSection?.name || profile?.className || 'Klase')} ·{' '}
+            {new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
+        </div>
+
         {/* Section bar */}
-        <div className="mb-6 bg-white rounded-2xl shadow-card p-4 flex flex-wrap items-center gap-3">
+        <div className="no-print mb-6 bg-white border border-slate-200/70 rounded-2xl shadow-card p-4 flex flex-wrap items-center gap-3">
           <span className="text-[11px] uppercase tracking-wide text-slate-500 font-bold">Section</span>
 
           {sections.length > 0 ? (
@@ -333,9 +353,10 @@ export default function ClassDashboard() {
               <button
                 onClick={copyCode}
                 title="I-kopya"
-                className="font-mono font-bold tracking-widest text-teal bg-teal/10 px-3 py-1.5 rounded-lg hover:bg-teal/20 transition"
+                className="inline-flex items-center gap-2 font-mono font-bold tracking-widest text-teal bg-teal/10 px-3 py-1.5 rounded-lg hover:bg-teal/20 transition"
               >
-                {activeSection.code} {copied ? '✓' : '⧉'}
+                {activeSection.code}
+                <Icon name={copied ? 'check' : 'copy'} size={15} strokeWidth={copied ? 2.5 : 1.75} />
               </button>
             </div>
           )}
@@ -343,9 +364,9 @@ export default function ClassDashboard() {
           {activeSection && (
             <button
               onClick={() => (storyMgrOpen ? setStoryMgrOpen(false) : openStoryManager())}
-              className="text-sm font-heading font-semibold text-navy bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition"
+              className="inline-flex items-center gap-1.5 text-sm font-heading font-semibold text-navy bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition"
             >
-              📖 Mga Kwento ({assignedIds ? assignedIds.length : catalog.length})
+              <Icon name="book" size={16} /> Mga Kwento ({assignedIds ? assignedIds.length : catalog.length})
             </button>
           )}
 
@@ -376,9 +397,9 @@ export default function ClassDashboard() {
             ) : (
               <button
                 onClick={() => setCreating(true)}
-                className="h-10 px-4 rounded-xl border-2 border-teal/40 text-teal text-sm font-heading font-bold hover:bg-teal/5 transition btn-press"
+                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border-2 border-teal/40 text-teal text-sm font-heading font-bold hover:bg-teal/5 transition btn-press"
               >
-                + Bagong Section
+                <Icon name="plus" size={16} /> Bagong Section
               </button>
             )}
           </div>
@@ -386,7 +407,7 @@ export default function ClassDashboard() {
 
         {/* Story assignment manager */}
         {storyMgrOpen && activeSection && (
-          <div className="mb-6 bg-white rounded-2xl shadow-card p-5">
+          <div className="no-print mb-6 bg-white border border-slate-200/70 rounded-2xl shadow-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <div>
                 <h3 className="font-heading font-bold text-navy">
@@ -399,9 +420,9 @@ export default function ClassDashboard() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setComposeOpen((v) => !v)}
-                  className="text-xs font-semibold text-white bg-gradient-to-r from-teal to-teal-600 px-3 py-1.5 rounded-lg btn-press"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal hover:bg-teal-600 px-3 py-1.5 rounded-lg btn-press transition"
                 >
-                  ➕ Gumawa ng Kwento
+                  <Icon name="plus" size={15} /> Gumawa ng Kwento
                 </button>
                 <button
                   onClick={() => setSelected(new Set(catalog.map((s) => s.id)))}
@@ -440,7 +461,7 @@ export default function ClassDashboard() {
                   >
                     {[1, 2, 3, 4, 5, 6].map((g) => (
                       <option key={g} value={g}>
-                        Antas {g}
+                        Antas sa Pagbasa {g}
                       </option>
                     ))}
                   </select>
@@ -520,10 +541,10 @@ export default function ClassDashboard() {
                 onChange={(e) => setFilterLevel(e.target.value)}
                 className="h-9 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:border-teal focus:outline-none"
               >
-                <option value="all">Lahat ng antas</option>
+                <option value="all">Lahat ng antas sa pagbasa</option>
                 {[1, 2, 3, 4, 5, 6].map((g) => (
                   <option key={g} value={g}>
-                    Antas {g}
+                    Antas sa Pagbasa {g}
                   </option>
                 ))}
               </select>
@@ -568,7 +589,7 @@ export default function ClassDashboard() {
                           )}
                         </span>
                         <span className="block text-[11px] text-slate-500">
-                          Antas {s.level} · {s.language}
+                          Pagbasa {s.level} · {s.language}
                         </span>
                       </span>
                     </label>
@@ -577,9 +598,10 @@ export default function ClassDashboard() {
                         type="button"
                         onClick={() => handleDeleteStory(s)}
                         title="Burahin ang kwento"
-                        className="shrink-0 text-slate-400 hover:text-red-500 transition px-1"
+                        aria-label="Burahin ang kwento"
+                        className="shrink-0 text-slate-400 hover:text-rose-500 transition px-1"
                       >
-                        🗑
+                        <Icon name="trash" size={17} />
                       </button>
                     )}
                   </div>
@@ -606,28 +628,28 @@ export default function ClassDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
           <StatCard
-            icon="👥"
+            icon="users"
             label="Total Students"
             value={loading ? '—' : students.length}
             color="navy"
             loading={loading}
           />
           <StatCard
-            icon="📊"
+            icon="chartBar"
             label="Average Level"
             value={loading ? '—' : avgLevel}
             color="purple"
             loading={loading}
           />
           <StatCard
-            icon="✅"
+            icon="checkCircle"
             label="Active Today"
             value={loading ? '—' : activeToday}
             color="green"
             loading={loading}
           />
           <StatCard
-            icon="⚠️"
+            icon="alert"
             label="Needs Attention"
             value={loading ? '—' : flaggedCount}
             color="red"
@@ -636,8 +658,13 @@ export default function ClassDashboard() {
           />
         </div>
 
-        {/* Tabs */}
-        <div className="mt-7 flex flex-wrap gap-2">
+        {/* Class analytics */}
+        {!loading && students.length > 0 && (
+          <ClassInsights students={studentsScored} className="mt-6" />
+        )}
+
+        {/* Tabs + export */}
+        <div className="no-print mt-7 flex flex-wrap items-center gap-2">
           {TABS.map((t) => {
             const active = tab === t.id;
             return (
@@ -646,24 +673,38 @@ export default function ClassDashboard() {
                 onClick={() => setTab(t.id)}
                 className={`px-4 py-2 rounded-full text-xs font-heading font-bold uppercase tracking-wide transition ${
                   active
-                    ? 'bg-gradient-to-r from-teal to-teal-600 text-white shadow-glow-teal'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-teal'
+                    ? 'bg-navy text-white'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-teal hover:text-teal'
                 }`}
               >
                 {t.label}
               </button>
             );
           })}
+          <div className="ml-auto flex items-center gap-2 no-print">
+            <button
+              onClick={() => exportRosterCsv(studentsScored, activeSection?.name)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-heading font-bold text-navy bg-white border border-slate-200 hover:border-teal hover:text-teal transition"
+            >
+              <Icon name="download" size={15} /> CSV
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-heading font-bold text-white bg-navy hover:bg-navy/90 transition"
+            >
+              <Icon name="printer" size={15} /> I-print / PDF
+            </button>
+          </div>
         </div>
 
         {/* Table */}
-        <div className="mt-5 bg-white rounded-2xl shadow-card overflow-hidden">
+        <div className="mt-5 bg-white border border-slate-200/70 rounded-2xl shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
                   {header('Name', 'name')}
-                  {header('Antas', 'level')}
+                  {header('Antas sa Pagbasa', 'level')}
                   <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-bold">
                     Huling Session
                   </th>

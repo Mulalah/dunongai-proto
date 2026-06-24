@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Logo from '../../components/ui/Logo';
+import Icon from '../../components/ui/Icon';
 import { db, FIREBASE_ENABLED, collection, query, where, getDocs } from '../../firebase';
 import { findSectionByCode } from '../../utils/sections';
 
@@ -141,7 +142,7 @@ export default function Signup() {
   }
 
   const inputCls =
-    'w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-teal focus:bg-white focus:outline-none transition';
+    'w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:bg-white focus:outline-none transition';
 
   return (
     <div className="min-h-screen flex">
@@ -164,7 +165,9 @@ export default function Signup() {
       <div className="flex-1 flex items-center justify-center p-8 bg-white">
         {done ? (
           <div className="w-full max-w-md text-center page-enter">
-            <div className="text-5xl mb-3">📧</div>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-teal/10 text-teal flex items-center justify-center">
+              <Icon name="mail" size={30} />
+            </div>
             <h1 className="font-heading font-extrabold text-navy text-3xl">Halos tapos na!</h1>
             <p className="text-slate-600 mt-3">
               Nagpadala kami ng verification link sa{' '}
@@ -217,15 +220,16 @@ export default function Signup() {
             />
 
             {form.password.length > 0 && (
-              <ul className="-mt-1 grid grid-cols-1 gap-0.5 text-xs">
+              <ul className="-mt-1 grid grid-cols-1 gap-1 text-xs">
                 {PW_RULES.map((r) => {
                   const ok = r.test(form.password);
                   return (
                     <li
                       key={r.label}
-                      className={ok ? 'text-emerald-600' : 'text-slate-400'}
+                      className={`flex items-center gap-1.5 ${ok ? 'text-emerald-600' : 'text-slate-400'}`}
                     >
-                      {ok ? '✓' : '○'} {r.label}
+                      <Icon name={ok ? 'checkCircle' : 'circle'} size={14} strokeWidth={ok ? 2 : 1.75} />
+                      {r.label}
                     </li>
                   );
                 })}

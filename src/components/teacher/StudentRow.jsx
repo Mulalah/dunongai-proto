@@ -1,5 +1,8 @@
 import Badge from '../ui/Badge';
 import ProgressBar from '../ui/ProgressBar';
+import Icon from '../ui/Icon';
+import ReadingLevelBadge from '../ui/ReadingLevelBadge';
+import { deriveStatus, STATUS_META } from '../../utils/insights';
 
 const AVATAR_COLORS = [
   'from-teal to-emerald-400',
@@ -17,9 +20,12 @@ function colorFromName(name = '') {
 }
 
 function statusPill(status) {
-  if (status === 'flagged') return <Badge variant="danger">⚠️ Tulong</Badge>;
-  if (status === 'improving') return <Badge variant="warning">📈 Improving</Badge>;
-  return <Badge variant="success">✅ On Track</Badge>;
+  const meta = STATUS_META[status] || STATUS_META['on-track'];
+  return (
+    <Badge variant={meta.variant}>
+      <Icon name={meta.icon} size={12} /> {meta.short}
+    </Badge>
+  );
 }
 
 function scoreColor(score) {
@@ -36,7 +42,8 @@ export default function StudentRow({ student, onView }) {
     .slice(0, 2)
     .join('')
     .toUpperCase();
-  const flagged = student.status === 'flagged';
+  const { status, reason } = deriveStatus(student);
+  const flagged = status === 'flagged';
 
   return (
     <tr
@@ -62,7 +69,7 @@ export default function StudentRow({ student, onView }) {
         </div>
       </td>
       <td className="p-4">
-        <Badge variant="level">Antas {student.currentLevel || 1}</Badge>
+        <ReadingLevelBadge level={student.currentLevel || 1} />
       </td>
       <td className="p-4 text-sm text-slate-600">
         {student.streakDays > 0 ? 'Kahapon' : '14+ araw'}
@@ -81,16 +88,18 @@ export default function StudentRow({ student, onView }) {
         </div>
       </td>
       <td className="p-4 text-sm">
-        <span className="text-amber-500">🔥</span>
-        <span className="ml-1 font-semibold">{student.streakDays || 0}</span>
+        <span className="inline-flex items-center gap-1">
+          <Icon name="flame" size={15} className="text-amber-500" />
+          <span className="font-semibold tabular-nums">{student.streakDays || 0}</span>
+        </span>
       </td>
-      <td className="p-4">{statusPill(student.status)}</td>
+      <td className="p-4" title={reason}>{statusPill(status)}</td>
       <td className="p-4 text-right">
         <button
           onClick={() => onView?.(student)}
-          className="text-teal text-sm font-heading font-semibold hover:underline"
+          className="inline-flex items-center gap-1 text-teal text-sm font-heading font-semibold hover:gap-1.5 transition-all"
         >
-          Tingnan →
+          Tingnan <Icon name="arrowRight" size={15} />
         </button>
       </td>
     </tr>

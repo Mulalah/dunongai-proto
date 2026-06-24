@@ -3,8 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import TopBar from '../../components/layout/TopBar';
 import Badge from '../../components/ui/Badge';
+import Icon from '../../components/ui/Icon';
+import ReadingLevelBadge from '../../components/ui/ReadingLevelBadge';
 import ScoreTrendChart from '../../components/teacher/ScoreTrendChart';
 import AISummaryCard from '../../components/teacher/AISummaryCard';
+import { deriveStatus, synthTrend } from '../../utils/insights';
 import {
   db,
   FIREBASE_ENABLED,
@@ -71,7 +74,7 @@ export default function StudentProfile() {
     return (
       <PageWrapper role="teacher">
         <TopBar title="Loading…" />
-        <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl shadow-card p-6 space-y-3">
             <div className="skeleton h-6 w-1/2" />
             <div className="skeleton h-3 w-1/3" />
@@ -101,25 +104,25 @@ export default function StudentProfile() {
     .slice(0, 2)
     .join('')
     .toUpperCase();
-  const flagged = student.status === 'flagged';
+  const flagged = deriveStatus(student).status === 'flagged';
   const lastActiveDays = student.streakDays > 0 ? 1 : 14;
 
   const recommendations = flagged
     ? [
         'Mag-schedule ng one-on-one reading session ngayong linggo.',
-        'Subukan munang Antas 2 stories para itaas ang confidence.',
+        'Subukan munang Antas sa Pagbasa 2 stories para itaas ang confidence.',
         'I-pair sa peer reader para sa group sessions.'
       ]
     : student.lastScore >= 80
     ? [
-        'Subukang i-advance sa susunod na antas (80%+ score).',
+        'Subukang i-advance sa susunod na antas sa pagbasa (80%+ score).',
         'Bigyan ng challenge stories para sa higher-order inference.',
         'I-recognize sa class para sa motivation boost.'
       ]
     : [
         'Dagdag practice sa inference questions.',
         'Subukang mag-read aloud para sa fluency.',
-        'Mag-focus sa vocabulary expansion sa Antas ' + (student.currentLevel || 3) + '.'
+        'Mag-focus sa vocabulary expansion sa Antas sa Pagbasa ' + (student.currentLevel || 3) + '.'
       ];
 
   return (
@@ -129,21 +132,29 @@ export default function StudentProfile() {
           <span className="flex items-center gap-2">
             <button
               onClick={() => navigate('/teacher/dashboard')}
-              className="text-teal text-sm hover:underline mr-2"
+              className="inline-flex items-center gap-1 text-teal text-sm hover:underline mr-2"
             >
-              ← Bumalik
+              <Icon name="arrowLeft" size={16} /> Bumalik
             </button>
             {student.displayName}
           </span>
         }
         subtitle={`Grade ${student.gradeLevel || 3} · ${student.schoolName || 'Rizal Elementary School'}`}
+        actions={
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-heading font-bold text-white bg-navy hover:bg-navy/90 transition"
+          >
+            <Icon name="printer" size={15} /> I-print / PDF
+          </button>
+        }
       />
 
-      <div className="p-8 grid grid-cols-1 lg:grid-cols-11 gap-6 page-enter">
+      <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-11 gap-6 page-enter">
         {/* Left */}
         <div className="lg:col-span-6 space-y-6">
           {/* Header card */}
-          <div className="bg-white rounded-2xl shadow-card p-6">
+          <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal to-emerald-400 flex items-center justify-center text-white text-lg font-heading font-extrabold">
                 {initials}
@@ -154,7 +165,7 @@ export default function StudentProfile() {
                 </div>
                 <div className="text-sm text-slate-500">Grade {student.gradeLevel || 3}</div>
                 <div className="mt-2 flex items-center gap-2">
-                  <Badge variant="level">Antas {student.currentLevel || 1}</Badge>
+                  <ReadingLevelBadge level={student.currentLevel || 1} />
                   <span
                     className={`text-xs ${
                       lastActiveDays > 7 ? 'text-red-500' : 'text-slate-500'
@@ -162,7 +173,11 @@ export default function StudentProfile() {
                   >
                     Huling aktibo: {lastActiveDays > 7 ? '14+ na araw' : 'Kahapon'}
                   </span>
-                  {flagged && <Badge variant="danger">⚠️ Needs Attention</Badge>}
+                  {flagged && (
+                    <Badge variant="danger">
+                      <Icon name="alert" size={12} /> Needs Attention
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
@@ -171,12 +186,12 @@ export default function StudentProfile() {
           <AISummaryCard student={student} sessions={sessions} />
 
           {/* Recommendations */}
-          <div className="bg-white rounded-2xl shadow-card p-6 border-l-4 border-teal">
+          <div className="bg-white rounded-2xl shadow-card p-6 border border-slate-200/70 border-l-4 border-l-teal">
             <h3 className="font-heading font-bold text-navy text-lg mb-3">Recommendations</h3>
-            <ul className="space-y-2 text-sm text-slate-700">
+            <ul className="space-y-2.5 text-sm text-slate-700">
               {recommendations.map((r, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <span className="text-teal mt-0.5">▸</span>
+                <li key={i} className="flex items-start gap-2.5">
+                  <Icon name="checkCircle" size={17} className="text-teal mt-0.5 shrink-0" />
                   <span>{r}</span>
                 </li>
               ))}
@@ -186,18 +201,18 @@ export default function StudentProfile() {
 
         {/* Right */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl shadow-card p-6">
+          <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
             <h3 className="font-heading font-bold text-navy text-lg">
               Comprehension Score Trend
             </h3>
             <p className="text-xs text-slate-500 mb-3">Huling 4 na linggo</p>
-            <ScoreTrendChart sessions={sessions.length ? sessions : sampleTrend(student)} />
+            <ScoreTrendChart sessions={sessions.length ? sessions : synthTrend(student)} />
           </div>
 
-          <div className="bg-white rounded-2xl shadow-card p-6">
+          <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
             <h3 className="font-heading font-bold text-navy text-lg mb-3">Recent Sessions</h3>
             <div className="space-y-2">
-              {(sessions.length ? sessions : sampleTrend(student))
+              {(sessions.length ? sessions : synthTrend(student))
                 .slice(-5)
                 .reverse()
                 .map((s, i) => (
@@ -205,8 +220,8 @@ export default function StudentProfile() {
                     key={i}
                     className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal to-emerald-400 flex items-center justify-center text-white">
-                      📖
+                    <div className="w-9 h-9 rounded-lg bg-teal/10 text-teal flex items-center justify-center">
+                      <Icon name="bookOpen" size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-heading font-semibold text-sm text-navy truncate">
@@ -241,21 +256,4 @@ export default function StudentProfile() {
       </div>
     </PageWrapper>
   );
-}
-
-function sampleTrend(student) {
-  const now = new Date();
-  const base = student.lastScore || 60;
-  return [
-    { storyTitle: 'Sample 1', score: Math.max(20, base - 12), stars: 2, completedAt: ts(now, 21) },
-    { storyTitle: 'Sample 2', score: Math.max(20, base - 6), stars: 3, completedAt: ts(now, 14) },
-    { storyTitle: 'Sample 3', score: Math.max(20, base - 2), stars: 3, completedAt: ts(now, 7) },
-    { storyTitle: 'Sample 4', score: base, stars: 4, completedAt: ts(now, 0) }
-  ];
-}
-
-function ts(now, daysAgo) {
-  const d = new Date(now);
-  d.setDate(d.getDate() - daysAgo);
-  return { seconds: Math.floor(d.getTime() / 1000), toDate: () => d };
 }

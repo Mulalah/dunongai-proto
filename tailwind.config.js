@@ -52,10 +52,12 @@ export default {
         reading: ['Lora', 'Georgia', 'serif']
       },
       boxShadow: {
-        'glow-teal': '0 0 24px 0 rgba(13, 148, 136, 0.45)',
-        'glow-gold': '0 0 24px 0 rgba(245, 158, 11, 0.45)',
-        card: '0 4px 20px -4px rgba(10, 22, 40, 0.08)',
-        'card-hover': '0 12px 32px -8px rgba(10, 22, 40, 0.18)'
+        'glow-teal': '0 8px 24px -8px rgba(13, 148, 136, 0.5)',
+        'glow-gold': '0 8px 24px -8px rgba(245, 158, 11, 0.5)',
+        xs: '0 1px 2px 0 rgba(10, 22, 40, 0.05)',
+        card: '0 1px 2px rgba(10, 22, 40, 0.04), 0 6px 20px -8px rgba(10, 22, 40, 0.12)',
+        'card-hover':
+          '0 2px 4px rgba(10, 22, 40, 0.05), 0 16px 36px -12px rgba(10, 22, 40, 0.2)'
       },
       animation: {
         fadeSlideUp: 'fadeSlideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both',

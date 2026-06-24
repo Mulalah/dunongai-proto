@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from 'react';
 import { basaBotChat, isDemoMode } from '../../utils/claude';
+import Icon from '../ui/Icon';
 
 const WELCOME = {
   role: 'bot',
@@ -52,7 +53,7 @@ const BasaBotPanel = forwardRef(function BasaBotPanel({ storyContext = '' }, ref
   }
 
   return (
-    <aside className="w-[360px] flex flex-col h-full bg-white border-l border-slate-200 shrink-0">
+    <aside className="w-full lg:w-[360px] flex flex-col h-[70vh] min-h-[400px] lg:h-full lg:min-h-0 bg-white border-t lg:border-t-0 lg:border-l border-slate-200 shrink-0">
       {/* Header */}
       <div
         className="px-5 py-4 text-white relative overflow-hidden"
@@ -122,14 +123,15 @@ const BasaBotPanel = forwardRef(function BasaBotPanel({ storyContext = '' }, ref
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && send()}
             placeholder="I-type ang tanong mo…"
-            className="flex-1 h-11 px-4 rounded-xl bg-slate-100 border border-slate-200 text-sm focus:outline-none focus:border-teal focus:bg-white transition"
+            className="flex-1 h-11 px-4 rounded-xl bg-slate-100 border border-slate-200 text-sm focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 focus:bg-white transition"
           />
           <button
             onClick={send}
             disabled={typing || !input.trim()}
-            className="h-11 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-600 text-white font-heading font-semibold text-sm btn-press disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Ipadala"
+            className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-teal hover:bg-teal-600 text-white btn-press transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Send →
+            <Icon name="send" size={18} />
           </button>
         </div>
       </div>

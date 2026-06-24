@@ -1,0 +1,8 @@
+/* DunongAI marketing video — base reset. Fonts load via @remotion/google-fonts. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}

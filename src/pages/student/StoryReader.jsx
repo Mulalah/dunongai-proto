@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../components/layout/Sidebar';
 import BasaBotPanel from '../../components/student/BasaBotPanel';
 import Badge from '../../components/ui/Badge';
+import Icon from '../../components/ui/Icon';
+import ReadingLevelBadge from '../../components/ui/ReadingLevelBadge';
 import { formatTime } from '../../utils/levelUtils';
 import { getStoryById } from '../../utils/stories';
 
@@ -92,27 +94,29 @@ export default function StoryReader() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC]">
+    <div className="min-h-screen flex bg-[#f4f6f9]">
       <Sidebar />
-      <main className="flex-1 md:ml-[260px] flex flex-col min-h-screen">
+      <main className="flex-1 md:ml-[260px] flex flex-col min-h-screen lg:h-screen lg:overflow-hidden">
         {/* Custom top bar */}
-        <div className="h-14 bg-navy text-white flex items-center justify-between pl-16 pr-4 md:px-5 sticky top-0 z-30">
+        <div className="on-dark h-14 bg-navy text-white flex items-center justify-between pl-16 pr-4 md:px-5 sticky top-0 z-30">
           <button
             onClick={() => navigate('/student/library')}
-            className="flex items-center gap-2 text-sm font-heading font-semibold text-white/80 hover:text-white"
+            className="flex items-center gap-1.5 text-sm font-heading font-semibold text-white/80 hover:text-white transition"
           >
-            ← Bumalik
+            <Icon name="arrowLeft" size={18} /> Bumalik
           </button>
           <div className="font-heading font-semibold text-sm truncate max-w-md">
             {loading ? '…' : story?.title}
           </div>
-          <div className="text-xs text-white/70 tabular-nums">⏱ {formatTime(seconds)}</div>
+          <div className="flex items-center gap-1.5 text-xs text-white/70 tabular-nums">
+            <Icon name="clock" size={15} /> {formatTime(seconds)}
+          </div>
         </div>
 
-        <div className="flex-1 flex flex-col lg:flex-row">
+        <div className="flex-1 flex flex-col lg:flex-row lg:min-h-0 lg:overflow-hidden">
           {/* Reading panel */}
-          <div className="flex-1 bg-white overflow-y-auto">
-            <div className="px-14 py-12 max-w-[760px] mx-auto">
+          <div className="bg-white lg:flex-1 lg:overflow-y-auto">
+            <div className="px-5 py-8 sm:px-8 lg:px-14 lg:py-12 max-w-[760px] mx-auto">
               {loading ? (
                 <div className="space-y-3">
                   <div className="skeleton h-8 w-2/3" />
@@ -132,7 +136,7 @@ export default function StoryReader() {
                     {story.title}
                   </h1>
                   <div className="mt-3 flex items-center gap-2">
-                    <Badge variant="level">Antas {story.level}</Badge>
+                    <ReadingLevelBadge level={story.level} />
                     <Badge variant="language">{story.language}</Badge>
                     <span className="text-xs text-slate-400 italic">— {story.author}</span>
                   </div>
@@ -145,10 +149,10 @@ export default function StoryReader() {
                   <div className="mt-12 text-center">
                     <button
                       onClick={finish}
-                      className="inline-flex items-center gap-2 h-13 px-8 rounded-[10px] bg-gradient-to-r from-gold to-amber-500 text-navy font-heading font-bold shadow-glow-gold btn-press"
-                      style={{ height: 52 }}
+                      className="inline-flex items-center gap-2 h-[52px] px-8 rounded-xl bg-gold hover:bg-gold-600 text-navy font-heading font-bold shadow-glow-gold btn-press transition"
                     >
-                      Tapos na Basahin! ✓
+                      Tapos na Basahin!
+                      <Icon name="check" size={20} strokeWidth={2.5} />
                     </button>
                   </div>
                 </article>

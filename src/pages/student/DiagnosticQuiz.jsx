@@ -5,6 +5,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { assessReadingLevel } from '../../utils/claude';
 import { useAuth } from '../../context/AuthContext';
 import Logo from '../../components/ui/Logo';
+import Icon from '../../components/ui/Icon';
 
 const QUESTIONS = [
   {
@@ -127,7 +128,7 @@ export default function DiagnosticQuiz() {
             <div
               key={i}
               className={`h-1.5 flex-1 rounded-full transition ${
-                i <= step ? 'bg-gradient-to-r from-teal to-emerald-400' : 'bg-slate-200'
+                i <= step ? 'bg-teal' : 'bg-slate-200'
               }`}
             />
           ))}
@@ -162,20 +163,20 @@ export default function DiagnosticQuiz() {
                 <button
                   key={i}
                   onClick={() => selectOption(opt)}
-                  className={`w-full text-left h-13 px-5 py-3 rounded-xl border-2 font-heading font-semibold btn-press transition ${
+                  className={`w-full text-left px-5 py-3 rounded-xl border-2 font-heading font-semibold btn-press transition ${
                     sel
-                      ? 'border-teal bg-gradient-to-r from-teal to-teal-600 text-white shadow-glow-teal'
+                      ? 'border-teal bg-teal text-white'
                       : 'border-slate-200 bg-white text-navy hover:border-teal/50 hover:bg-teal/5'
                   }`}
                   style={{ minHeight: 52 }}
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                      className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-sm font-bold ${
                         sel ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                       }`}
                     >
-                      {sel ? '✓' : String.fromCharCode(65 + i)}
+                      {sel ? <Icon name="check" size={16} strokeWidth={2.5} /> : String.fromCharCode(65 + i)}
                     </span>
                     <span>{opt}</span>
                   </div>

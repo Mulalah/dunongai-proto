@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Confetti from '../../components/Confetti';
+import Icon from '../../components/ui/Icon';
 import {
   formatTime,
   getStarsFromScore,
@@ -160,7 +161,7 @@ export default function SessionComplete() {
         </div>
 
         {/* Score card */}
-        <div className="mt-8 bg-white rounded-2xl shadow-card p-8 text-center">
+        <div className="mt-8 bg-white border border-slate-200/70 rounded-2xl shadow-card p-8 text-center">
           <div className="text-xs uppercase tracking-wide text-teal font-bold">Comprehension</div>
           <div
             className="font-heading font-extrabold text-teal mt-2"
@@ -202,7 +203,7 @@ export default function SessionComplete() {
         </div>
 
         {/* Per-question feedback */}
-        <div className="mt-6 bg-white rounded-2xl shadow-card p-6">
+        <div className="mt-6 bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
           <h3 className="font-heading font-bold text-navy mb-4">Feedback sa bawat tanong</h3>
           <div className="space-y-3">
             {results.results.map((r, i) => {
@@ -218,11 +219,11 @@ export default function SessionComplete() {
                 >
                   <div className="flex items-start gap-3">
                     <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-white shrink-0 ${
                         isCorrect ? 'bg-emerald-500' : 'bg-amber-500'
                       }`}
                     >
-                      {isCorrect ? '✓' : '◯'}
+                      <Icon name={isCorrect ? 'check' : 'x'} size={16} strokeWidth={2.5} />
                     </span>
                     <div className="flex-1">
                       <div className="font-heading font-semibold text-navy text-sm">
@@ -258,7 +259,7 @@ export default function SessionComplete() {
                   {LEVEL_NAMES[Math.min(currentLevel + 1, 6)]} Reader
                 </div>
                 <div className="text-sm text-slate-600">
-                  Naabot mo ang susunod na antas. Patuloy mong galingan!
+                  Naabot mo ang susunod na antas sa pagbasa. Patuloy mong galingan!
                 </div>
               </div>
             </div>

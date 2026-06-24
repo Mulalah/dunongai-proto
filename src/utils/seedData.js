@@ -627,7 +627,7 @@ export async function seedDatabase(db) {
       badges: [
         { badgeId: 'first-story', name: 'Unang Kwento', icon: '📖', unlockedAt: daysAgo(40) },
         { badgeId: 'streak-3', name: '3-Day Streak', icon: '🔥', unlockedAt: daysAgo(20) },
-        { badgeId: 'level-3', name: 'Antas 3 Reader', icon: '⭐', unlockedAt: daysAgo(15) }
+        { badgeId: 'level-3', name: 'Antas sa Pagbasa 3', icon: '⭐', unlockedAt: daysAgo(15) }
       ],
       levelHistory: [
         { level: 1, date: '2025-01-01' },

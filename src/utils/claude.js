@@ -55,7 +55,7 @@ const FALLBACKS = {
   levelAdjust: { action: 'advance', reason: 'Demo: excellent score' },
 
   summary:
-    'Si [name] ay nasa Antas 3. Sa nakaraang linggo, nakumpleto niya ang 3 kwento na may average na 72% comprehension score. Inirerekomenda: dagdag na practice sa inference questions bago i-advance sa Antas 4.',
+    'Si [name] ay nasa Antas sa Pagbasa 3. Sa nakaraang linggo, nakumpleto niya ang 3 kwento na may average na 72% comprehension score. Inirerekomenda: dagdag na practice sa inference questions bago i-advance sa Antas sa Pagbasa 4.',
 
   basaBot:
     'Ang salitang iyon ay isang magandang salitang Filipino! Subukan mong gamitin ito sa pangungusap. (Demo mode — ikonekta ang Claude API para sa tunay na sagot)'

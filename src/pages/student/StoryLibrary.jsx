@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../../components/layout/PageWrapper';
 import TopBar from '../../components/layout/TopBar';
 import StoryCard from '../../components/student/StoryCard';
-import Badge from '../../components/ui/Badge';
+import ReadingLevelBadge from '../../components/ui/ReadingLevelBadge';
+import Icon from '../../components/ui/Icon';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 import { findSectionByCode, getSectionById, getSectionsByIds, MAX_SECTIONS } from '../../utils/sections';
@@ -194,9 +195,11 @@ export default function StoryLibrary() {
     return (
       <PageWrapper role="student">
         <TopBar title="Maligayang pagdating! 🎒" subtitle="Sumali muna sa iyong section" />
-        <div className="p-8 page-enter flex justify-center">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-card p-8 text-center mt-6">
-            <div className="text-5xl mb-3">🔑</div>
+        <div className="p-4 sm:p-6 lg:p-8 page-enter flex justify-center">
+          <div className="w-full max-w-md bg-white border border-slate-200/70 rounded-2xl shadow-card p-8 text-center mt-6">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-teal/10 text-teal flex items-center justify-center">
+              <Icon name="key" size={30} />
+            </div>
             <h2 className="font-heading font-extrabold text-navy text-2xl">Sumali sa iyong section</h2>
             <p className="text-slate-500 mt-2">
               Ipasok ang section code na ibinigay ng iyong guro para makita ang mga kwento.
@@ -211,9 +214,10 @@ export default function StoryLibrary() {
               <button
                 type="submit"
                 disabled={joining}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-teal to-teal-600 text-white font-heading font-bold btn-press disabled:opacity-60"
+                className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-teal hover:bg-teal-600 text-white font-heading font-bold btn-press transition disabled:opacity-60"
               >
-                {joining ? 'Sumasali…' : 'Sumali sa Section →'}
+                {joining ? 'Sumasali…' : 'Sumali sa Section'}
+                {!joining && <Icon name="arrowRight" size={18} />}
               </button>
             </form>
             {joinMsg && !joinMsg.ok && (
@@ -232,17 +236,17 @@ export default function StoryLibrary() {
         subtitle="Pumili ng kwento para basahin"
         actions={
           <div className="flex items-center gap-2">
-            <Badge variant="level">Antas {level}</Badge>
-            <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold">
-              🔥 {streak}
+            <ReadingLevelBadge level={level} />
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold">
+              <Icon name="flame" size={14} /> {streak}
             </span>
           </div>
         }
       />
 
-      <div className="p-8 page-enter">
+      <div className="p-4 sm:p-6 lg:p-8 page-enter">
         {/* My sections — switch active section (drives stories + leaderboard) */}
-        <div className="mb-5 bg-white rounded-2xl shadow-card p-4">
+        <div className="mb-5 bg-white border border-slate-200/70 rounded-2xl shadow-card p-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-navy font-heading font-semibold mr-1">Mga Section ko:</span>
             {joinedSections.map((s) => {
@@ -251,13 +255,13 @@ export default function StoryLibrary() {
                 <span key={s.id} className="inline-flex items-center rounded-full overflow-hidden">
                   <button
                     onClick={() => switchSection(s)}
-                    className={`px-3 py-1.5 text-sm font-heading font-semibold transition ${
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-heading font-semibold transition ${
                       active
-                        ? 'bg-gradient-to-r from-teal to-teal-600 text-white'
+                        ? 'bg-teal text-white'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    {s.name} {active && '✓'}
+                    {s.name} {active && <Icon name="check" size={14} />}
                   </button>
                   <button
                     onClick={() => leaveSection(s)}
@@ -289,7 +293,7 @@ export default function StoryLibrary() {
               <button
                 type="submit"
                 disabled={joining}
-                className="h-10 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-600 text-white text-sm font-heading font-bold btn-press disabled:opacity-60"
+                className="h-10 px-4 rounded-xl bg-teal hover:bg-teal-600 text-white text-sm font-heading font-bold btn-press transition disabled:opacity-60"
               >
                 {joining ? '…' : 'Sumali'}
               </button>
@@ -308,13 +312,14 @@ export default function StoryLibrary() {
 
         {/* Search */}
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔎</span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <Icon name="search" size={20} />
+          </span>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Hanapin ang kwento…"
-            className="w-full h-13 pl-12 pr-4 rounded-2xl border border-slate-200 bg-white shadow-card focus:border-teal focus:outline-none transition"
-            style={{ height: 52 }}
+            className="w-full h-[52px] pl-12 pr-4 rounded-2xl border border-slate-200 bg-white shadow-xs focus:border-teal focus:ring-2 focus:ring-teal/20 focus:outline-none transition"
           />
         </div>
 
@@ -328,8 +333,8 @@ export default function StoryLibrary() {
                 onClick={() => setFilter(f)}
                 className={`px-4 py-2 rounded-full text-xs font-heading font-bold uppercase tracking-wide transition ${
                   active
-                    ? 'bg-gradient-to-r from-teal to-teal-600 text-white shadow-glow-teal'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-teal'
+                    ? 'bg-navy text-white'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-teal hover:text-teal'
                 }`}
               >
                 {f}
@@ -363,9 +368,12 @@ export default function StoryLibrary() {
         </div>
 
         {!loading && filtered.length === 0 && (
-          <div className="text-center text-slate-500 py-14">
-            <div className="text-3xl mb-2">📭</div>
-            Walang nakitang kwento. Subukang ibang filter.
+          <div className="text-center text-slate-500 py-16">
+            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center">
+              <Icon name="search" size={26} />
+            </div>
+            <div className="font-heading font-semibold text-navy">Walang nakitang kwento</div>
+            <div className="text-sm mt-1">Subukang baguhin ang paghahanap o filter.</div>
           </div>
         )}
       </div>

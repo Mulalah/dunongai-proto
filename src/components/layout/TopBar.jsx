@@ -11,7 +11,7 @@ export default function TopBar({ title, subtitle, actions }) {
 
   return (
     <div
-      className={`sticky top-0 z-30 h-16 bg-white border-b border-slate-200 flex items-center justify-between pl-16 pr-4 md:px-8 transition-shadow ${
+      className={`no-print sticky top-0 z-30 h-16 bg-white border-b border-slate-200 flex items-center justify-between pl-16 pr-4 md:px-8 transition-shadow ${
         scrolled ? 'shadow-sm' : ''
       }`}
     >

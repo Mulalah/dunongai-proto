@@ -7,7 +7,7 @@ export default function Landing() {
 
   return (
     <div
-      className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden text-white"
+      className="on-dark relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden text-white"
       style={{
         background: 'linear-gradient(135deg, #0A1628 0%, #0D4A4A 100%)'
       }}
@@ -39,8 +39,7 @@ export default function Landing() {
           </Button>
           <button
             onClick={() => navigate('/login/teacher')}
-            className="w-full h-13 px-6 rounded-[10px] border-2 border-white/40 text-white font-heading font-semibold text-base hover:bg-white/5 hover:border-white/70 transition btn-press"
-            style={{ height: 52 }}
+            className="w-full h-[52px] px-6 rounded-xl border-2 border-white/40 text-white font-heading font-semibold text-base hover:bg-white/5 hover:border-white/70 transition btn-press"
           >
             Mag-login bilang Guro
           </button>

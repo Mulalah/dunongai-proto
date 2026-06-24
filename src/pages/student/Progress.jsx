@@ -3,6 +3,7 @@ import PageWrapper from '../../components/layout/PageWrapper';
 import TopBar from '../../components/layout/TopBar';
 import BadgeCard from '../../components/student/BadgeCard';
 import LeaderboardRow from '../../components/student/LeaderboardRow';
+import Icon from '../../components/ui/Icon';
 import { useAuth } from '../../context/AuthContext';
 import { BADGES, LEVEL_NAMES, computeUnlockedBadges } from '../../utils/levelUtils';
 import { db, FIREBASE_ENABLED, collection, getDocs, query, where, orderBy, limit } from '../../firebase';
@@ -112,7 +113,7 @@ export default function Progress() {
   return (
     <PageWrapper role="student">
       <TopBar title="Ang Aking Progreso ⭐" />
-      <div className="p-8 page-enter">
+      <div className="p-4 sm:p-6 lg:p-8 page-enter">
         {/* Hero */}
         <div
           className="rounded-3xl p-7 text-white relative overflow-hidden"
@@ -133,27 +134,27 @@ export default function Progress() {
                 {profile?.schoolName || 'Rizal Elementary School'}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
-                  🔥 5 Araw
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
+                  <Icon name="flame" size={15} className="text-gold" /> 5 Araw
                 </span>
-                <span className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
-                  ⭐ 24 Bituin
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
+                  <Icon name="star" size={15} className="text-gold" /> 24 Bituin
                 </span>
-                <span className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
-                  📖 {sessions.length || 8} Kwento
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
+                  <Icon name="bookOpen" size={15} className="text-teal-200" /> {sessions.length || 8} Kwento
                 </span>
               </div>
             </div>
             <div className="text-right shrink-0">
               <div className="inline-flex flex-col items-center px-4 py-3 rounded-2xl bg-gradient-to-br from-gold to-amber-500 text-navy shadow-glow-gold">
-                <div className="text-[10px] uppercase tracking-wide font-bold">Antas</div>
+                <div className="text-[10px] uppercase tracking-wide font-bold">Pagbasa</div>
                 <div className="text-3xl font-heading font-extrabold leading-none">{level}</div>
               </div>
               <div className="mt-2 text-xs text-white/60">
                 3 sessions papunta sa {LEVEL_NAMES[Math.min(level + 1, 6)]}
               </div>
               <div className="mt-2 w-44 h-1.5 rounded-full bg-white/10 overflow-hidden ml-auto">
-                <div className="h-full rounded-full bg-gradient-to-r from-teal to-emerald-300 w-3/5" />
+                <div className="h-full rounded-full bg-teal w-3/5" />
               </div>
             </div>
           </div>
@@ -164,7 +165,7 @@ export default function Progress() {
           {/* Left */}
           <div className="lg:col-span-3 space-y-6">
             {/* Badges */}
-            <div className="bg-white rounded-2xl shadow-card p-6">
+            <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-heading font-bold text-navy text-lg">Mga Badge Ko 🏆</h3>
                 <span className="text-xs text-slate-500">
@@ -183,7 +184,7 @@ export default function Progress() {
             </div>
 
             {/* Level history */}
-            <div className="bg-white rounded-2xl shadow-card p-6">
+            <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
               <h3 className="font-heading font-bold text-navy text-lg mb-5">
                 Reading Level History
               </h3>
@@ -194,7 +195,7 @@ export default function Progress() {
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-heading font-bold ${
                           lvl <= level
-                            ? 'bg-gradient-to-br from-teal to-teal-600 text-white shadow-glow-teal'
+                            ? 'bg-teal text-white'
                             : 'bg-slate-100 text-slate-400'
                         }`}
                       >
@@ -207,7 +208,7 @@ export default function Progress() {
                       </div>
                     </div>
                     {i < arr.length - 1 && (
-                      <div className="flex-1 h-1 mx-2 rounded-full bg-gradient-to-r from-teal to-emerald-300 -mt-5" />
+                      <div className="flex-1 h-1 mx-2 rounded-full bg-teal/60 -mt-5" />
                     )}
                   </div>
                 ))}
@@ -217,7 +218,7 @@ export default function Progress() {
 
           {/* Right */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl shadow-card p-6">
+            <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
               <h3 className="font-heading font-bold text-navy text-lg mb-4">🏆 Sa Aming Klase</h3>
               <div className="space-y-2">
                 {leaderboard.map((row, i) => (
@@ -235,7 +236,7 @@ export default function Progress() {
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-card p-6">
+            <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
               <h3 className="font-heading font-bold text-navy text-lg mb-4">Recent Activity</h3>
               <div className="space-y-3">
                 {(sessions.length ? sessions : []).slice(0, 3).map((s) => (
@@ -243,8 +244,8 @@ export default function Progress() {
                     key={s.id}
                     className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal to-emerald-400 flex items-center justify-center text-white">
-                      📖
+                    <div className="w-9 h-9 rounded-lg bg-teal/10 text-teal flex items-center justify-center">
+                      <Icon name="bookOpen" size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-heading font-semibold text-sm text-navy truncate">
@@ -259,8 +260,8 @@ export default function Progress() {
                           : 'Recent'}
                       </div>
                     </div>
-                    <div className="text-sm font-heading font-bold text-teal">{s.score}%</div>
-                    <div className="text-gold text-sm">{'★'.repeat(s.stars || 1)}</div>
+                    <div className="text-sm font-heading font-bold text-teal tabular-nums">{s.score}%</div>
+                    <div className="text-gold text-sm tracking-tight">{'★'.repeat(s.stars || 1)}</div>
                   </div>
                 ))}
                 {!sessions.length && (

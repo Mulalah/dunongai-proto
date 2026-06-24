@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Logo from '../ui/Logo';
+import Icon from '../ui/Icon';
 
 const NAV = [
-  { to: '/teacher/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/teacher/flagged', label: 'Kailangan ng Tulong', icon: '⚠️' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' }
+  { to: '/teacher/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/teacher/flagged', label: 'Kailangan ng Tulong', icon: 'alert' },
+  { to: '/settings', label: 'Settings', icon: 'settings' }
 ];
 
 export default function TeacherSidebar() {
@@ -38,13 +39,13 @@ export default function TeacherSidebar() {
         className={`md:hidden fixed top-3 left-3 z-50 w-10 h-10 rounded-lg bg-navy text-white flex items-center justify-center shadow-lg ${open ? 'hidden' : ''}`}
         aria-label="Buksan ang menu"
       >
-        ☰
+        <Icon name="menu" size={20} />
       </button>
       {open && (
         <div onClick={() => setOpen(false)} className="md:hidden fixed inset-0 bg-black/40 z-40" />
       )}
       <aside
-        className={`fixed left-0 top-0 h-screen w-[260px] flex flex-col text-white z-40 transform transition-transform duration-200 md:translate-x-0 ${
+        className={`on-dark fixed left-0 top-0 h-screen w-[260px] flex flex-col text-white z-40 transform transition-transform duration-200 md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{
@@ -64,10 +65,10 @@ export default function TeacherSidebar() {
             to={n.to}
             onClick={() => setOpen(false)}
             className={({ isActive }) =>
-              `relative flex items-center gap-3 px-4 py-3 my-1 rounded-xl text-sm font-heading font-semibold transition ${
+              `relative flex items-center gap-3 px-4 py-2.5 my-1 rounded-xl text-sm font-heading font-semibold transition ${
                 isActive
-                  ? 'bg-gradient-to-r from-teal/30 to-teal/10 text-white'
-                  : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/65 hover:bg-white/5 hover:text-white'
               }`
             }
           >
@@ -76,7 +77,7 @@ export default function TeacherSidebar() {
                 {isActive && (
                   <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-teal" />
                 )}
-                <span className="text-lg">{n.icon}</span>
+                <Icon name={n.icon} size={19} className={isActive ? 'text-teal-300' : ''} />
                 <span>{n.label}</span>
               </>
             )}
@@ -85,7 +86,7 @@ export default function TeacherSidebar() {
       </nav>
 
       <div className="mx-3 mb-2 p-4 rounded-xl bg-white/5 border border-white/10">
-        <div className="text-[10px] uppercase tracking-wide text-white/50 mb-1">Aking Klase</div>
+        <div className="text-[10px] uppercase tracking-wide text-white/50 mb-1.5">Aking Klase</div>
         <div className="inline-block px-3 py-1 rounded-full bg-teal/20 text-teal-100 text-xs font-semibold">
           {activeName || profile?.className || 'Klase'}
         </div>
@@ -105,9 +106,9 @@ export default function TeacherSidebar() {
                 await logout();
                 navigate('/');
               }}
-              className="text-xs text-white/50 hover:text-white transition"
+              className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white transition"
             >
-              Mag-logout
+              <Icon name="logOut" size={13} /> Mag-logout
             </button>
           </div>
         </div>

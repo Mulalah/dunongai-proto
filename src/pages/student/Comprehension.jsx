@@ -5,6 +5,7 @@ import TopBar from '../../components/layout/TopBar';
 import QuestionCard from '../../components/student/QuestionCard';
 import Button from '../../components/ui/Button';
 import ProgressBar from '../../components/ui/ProgressBar';
+import Icon from '../../components/ui/Icon';
 import { evaluateAnswer, generateQuestions, isDemoMode } from '../../utils/claude';
 
 export default function Comprehension() {
@@ -96,9 +97,9 @@ export default function Comprehension() {
         title="Mga Tanong 🤔"
         subtitle={total ? `Tanong ${step + 1} ng ${total}` : 'Inihahanda ang mga tanong…'}
       />
-      <div className="p-8 max-w-3xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-card p-7">
+          <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-7">
             <div className="skeleton h-3 w-24 mb-4" />
             <div className="skeleton h-6 w-3/4 mb-6" />
             <div className="space-y-3">
@@ -128,11 +129,15 @@ export default function Comprehension() {
                 variant="ghost"
                 onClick={() => setStep((s) => Math.max(0, s - 1))}
                 disabled={step === 0}
+                icon={<Icon name="arrowLeft" size={18} />}
               >
-                ← Nakaraan
+                Nakaraan
               </Button>
               <Button onClick={next} disabled={!ready} loading={submitting} size="lg">
-                {isLast ? 'I-submit →' : 'Susunod na Tanong →'}
+                <span className="inline-flex items-center gap-2">
+                  {isLast ? 'I-submit' : 'Susunod na Tanong'}
+                  <Icon name="arrowRight" size={18} />
+                </span>
               </Button>
             </div>
           </>

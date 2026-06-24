@@ -5,6 +5,7 @@ import PageWrapper from '../components/layout/PageWrapper';
 import TopBar from '../components/layout/TopBar';
 import Button from '../components/ui/Button';
 import Logo from '../components/ui/Logo';
+import Icon from '../components/ui/Icon';
 import { auth, FIREBASE_ENABLED, updatePassword } from '../firebase';
 
 export default function Settings() {
@@ -25,7 +26,7 @@ export default function Settings() {
   const [pwBusy, setPwBusy] = useState(false);
 
   const inputCls =
-    'w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-teal focus:bg-white focus:outline-none transition';
+    'w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 focus:border-teal focus:ring-2 focus:ring-teal/20 focus:bg-white focus:outline-none transition';
 
   function saveProfile(e) {
     e.preventDefault();
@@ -73,9 +74,9 @@ export default function Settings() {
   }
 
   const content = (
-    <div className="max-w-xl mx-auto p-8 page-enter space-y-6">
+    <div className="max-w-xl mx-auto p-4 sm:p-6 lg:p-8 page-enter space-y-6">
       {/* Profile */}
-      <div className="bg-white rounded-2xl shadow-card p-6">
+      <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
         <h2 className="font-heading font-bold text-navy text-lg">Profile</h2>
         <form onSubmit={saveProfile} className="mt-4 space-y-4">
           <div>
@@ -132,7 +133,7 @@ export default function Settings() {
       </div>
 
       {/* Password */}
-      <div className="bg-white rounded-2xl shadow-card p-6">
+      <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6">
         <h2 className="font-heading font-bold text-navy text-lg">Palitan ang Password</h2>
         <form onSubmit={changePassword} className="mt-4 space-y-3">
           <input
@@ -156,7 +157,7 @@ export default function Settings() {
       </div>
 
       {/* Logout */}
-      <div className="bg-white rounded-2xl shadow-card p-6 flex items-center justify-between">
+      <div className="bg-white border border-slate-200/70 rounded-2xl shadow-card p-6 flex items-center justify-between">
         <div>
           <div className="font-heading font-bold text-navy">Mag-logout</div>
           <div className="text-sm text-slate-500">Lalabas ka sa iyong account.</div>
@@ -187,18 +188,18 @@ export default function Settings() {
 
   // Parent (or any other) — standalone layout with a back link.
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-[#f4f6f9]">
       <div
-        className="text-white px-8 py-6"
+        className="on-dark text-white px-5 sm:px-8 py-6"
         style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0D4A4A 100%)' }}
       >
         <div className="max-w-[1100px] mx-auto flex items-center justify-between">
           <Logo variant="dark" className="h-8 w-auto" />
           <button
             onClick={() => navigate('/parent/dashboard')}
-            className="text-sm text-white/70 hover:text-white border border-white/20 rounded-lg px-4 py-2 transition"
+            className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white border border-white/20 rounded-lg px-4 py-2 transition"
           >
-            ← Dashboard
+            <Icon name="arrowLeft" size={16} /> Dashboard
           </button>
         </div>
       </div>

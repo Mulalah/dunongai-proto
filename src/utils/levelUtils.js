@@ -1,11 +1,17 @@
 export const LEVEL_NAMES = {
-  1: 'Antas 1',
-  2: 'Antas 2',
-  3: 'Antas 3',
-  4: 'Antas 4',
-  5: 'Antas 5',
-  6: 'Antas 6'
+  1: 'Antas sa Pagbasa 1',
+  2: 'Antas sa Pagbasa 2',
+  3: 'Antas sa Pagbasa 3',
+  4: 'Antas sa Pagbasa 4',
+  5: 'Antas sa Pagbasa 5',
+  6: 'Antas sa Pagbasa 6'
 };
+
+// Compact reading-level label for dense chips/cells (e.g. next to "Grade N"),
+// kept deliberately distinct from a student's school grade.
+export function getReadingLevelShort(level) {
+  return `Pagbasa ${level}`;
+}
 
 export function getLevelColor(level) {
   if (level >= 6) return 'green';
@@ -72,17 +78,17 @@ export const BADGES = [
   },
   {
     badgeId: 'level-3',
-    name: 'Antas 3 Reader',
-    description: 'Naabot ang Antas 3',
+    name: 'Antas sa Pagbasa 3',
+    description: 'Naabot ang Antas sa Pagbasa 3',
     icon: '⭐',
-    requirement: 'Umakyat sa Antas 3'
+    requirement: 'Umakyat sa Antas sa Pagbasa 3'
   },
   {
     badgeId: 'level-5',
-    name: 'Antas 5 Master',
-    description: 'Naabot ang Antas 5',
+    name: 'Antas sa Pagbasa 5 Master',
+    description: 'Naabot ang Antas sa Pagbasa 5',
     icon: '🌟',
-    requirement: 'Umakyat sa Antas 5'
+    requirement: 'Umakyat sa Antas sa Pagbasa 5'
   },
   {
     badgeId: 'perfect-score',

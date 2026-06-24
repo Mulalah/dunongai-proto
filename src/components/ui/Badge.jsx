@@ -1,11 +1,13 @@
+// Soft, legible chips. "level" stays a confident solid teal because it's the
+// primary signal on story cards; "new" keeps its playful tilted gold tag.
 const VARIANTS = {
-  level: 'bg-gradient-to-r from-teal to-teal-600 text-white',
-  status: 'bg-slate-100 text-slate-700',
+  level: 'bg-teal text-white',
+  status: 'bg-slate-100 text-slate-600',
   language: 'bg-violet-100 text-violet-700',
-  new: 'bg-gradient-to-r from-gold to-amber-500 text-navy -rotate-3 shadow-md',
-  success: 'bg-emerald-100 text-emerald-700',
-  warning: 'bg-amber-100 text-amber-800',
-  danger: 'bg-red-100 text-red-700'
+  new: 'bg-gold text-navy -rotate-2 shadow-sm',
+  success: 'bg-emerald-50 text-emerald-700',
+  warning: 'bg-amber-50 text-amber-700',
+  danger: 'bg-rose-50 text-rose-700'
 };
 
 export default function Badge({ children, variant = 'status', className = '' }) {

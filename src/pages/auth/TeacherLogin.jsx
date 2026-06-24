@@ -32,7 +32,7 @@ export default function TeacherLogin() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-6 relative text-white overflow-hidden"
+      className="on-dark min-h-screen flex items-center justify-center p-6 relative text-white overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0D4A4A 100%)' }}
     >
       <div className="absolute inset-0 grid-lines opacity-50 pointer-events-none" />
@@ -58,7 +58,7 @@ export default function TeacherLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="teacher-input mt-1 w-full h-12 px-4 rounded-xl bg-black/30 border border-white/20 text-white placeholder-white/40 focus:border-gold focus:bg-black/40 focus:outline-none transition"
+              className="teacher-input mt-1 w-full h-12 px-4 rounded-xl bg-black/30 border border-white/20 text-white placeholder-white/40 focus:border-gold focus:ring-2 focus:ring-gold/30 focus:bg-black/40 focus:outline-none transition"
             />
           </div>
           <div>
@@ -69,7 +69,7 @@ export default function TeacherLogin() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="teacher-input mt-1 w-full h-12 px-4 rounded-xl bg-black/30 border border-white/20 text-white placeholder-white/40 focus:border-gold focus:bg-black/40 focus:outline-none transition"
+              className="teacher-input mt-1 w-full h-12 px-4 rounded-xl bg-black/30 border border-white/20 text-white placeholder-white/40 focus:border-gold focus:ring-2 focus:ring-gold/30 focus:bg-black/40 focus:outline-none transition"
             />
           </div>
 

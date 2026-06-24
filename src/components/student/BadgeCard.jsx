@@ -1,3 +1,5 @@
+import Icon from '../ui/Icon';
+
 export default function BadgeCard({ badge, locked = false }) {
   return (
     <div
@@ -8,8 +10,8 @@ export default function BadgeCard({ badge, locked = false }) {
       }`}
     >
       {locked && (
-        <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-sm">
-          🔒
+        <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+          <Icon name="lock" size={14} />
         </div>
       )}
       <div
