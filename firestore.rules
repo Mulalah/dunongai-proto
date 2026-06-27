@@ -24,6 +24,12 @@ service cloud.firestore {
       allow delete: if isTeacher() && resource.data.createdBy == request.auth.uid;
     }
 
+    // Seed metadata (e.g. content version). Public read; teachers write during seeding.
+    match /meta/{docId} {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
     // A user can read/write their own profile.
     // Teachers can read students in their sections; parents read their linked child.
     match /users/{uid} {

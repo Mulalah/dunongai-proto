@@ -1,15 +1,20 @@
 import {
   collection,
   getDocs,
+  getDoc,
   doc,
   setDoc,
   addDoc,
-  deleteDoc,
   Timestamp,
   query,
   limit
 } from 'firebase/firestore';
 import { FIREBASE_ENABLED } from '../firebase';
+
+// Bump this whenever the seed story CONTENT changes (e.g. rewritten text).
+// On the next load, a connected Firebase deployment will re-upsert the seed
+// stories so the new text goes live, without touching teacher-created stories.
+const SEED_VERSION = 2;
 
 const STORIES = [
   {
@@ -21,17 +26,17 @@ const STORIES = [
     gradient: 'from-emerald-400 to-teal-600',
     emoji: '🌱',
     tapWords: ['taniman', 'kamatis', 'pag-aalaga'],
-    text: `Si Lolo Pedro ay may malaking taniman sa kanilang bakuran.
-Tuwing umaga, binibisita niya ang kanyang mga halaman.
-May mga kamatis, sitaw, at talong na lumalaki roon.
-Tinutulungan siya ng kanyang apo na si Benjo tuwing Sabado.
+    text: `Si Lolo Pedro ay may malaking taniman sa likod ng kanilang bahay.
+Tuwing umaga, maaga siyang gumigising para bisitahin ang kanyang mga halaman.
+May mga kamatis, sitaw, at talong na masaya niyang inaalagaan araw-araw.
 
-"Lolo, bakit mo mahal ang iyong taniman?" tanong ni Benjo.
+Tuwing Sabado, tinutulungan siya ng kanyang apo na si Benjo.
+"Lolo, bakit mo ba mahal na mahal ang iyong taniman?" tanong ni Benjo isang araw.
+"Dahil ang mga halaman ay tulad ng mga tao," ngiti ni Lolo Pedro. "Kailangan nila ng pagmamahal at pag-aalaga para lumaki nang malusog."
 
-"Dahil ang mga halaman ay tulad ng mga tao — kailangan nila ng pagmamahal at pag-aalaga para lumaki nang maayos," sagot ni Lolo Pedro habang ngingiti.
-
-Nag-ani sila ng mga kamatis at sitaw nang hapon.
-Masaya silang nagbalik sa bahay na may dalang sariwang gulay.`
+Nang hapong iyon, nag-ani sila ng mapula-pulang kamatis at sariwang sitaw.
+Masaya silang naglakad pauwi, dala-dala ang basket na puno ng gulay.
+Naunawaan ni Benjo na ang tiyaga sa pag-aalaga ay laging may matamis na bunga.`
   },
   {
     id: 'story-puppy',
@@ -43,17 +48,16 @@ Masaya silang nagbalik sa bahay na may dalang sariwang gulay.`
     emoji: '🐶',
     tapWords: ['shivering', 'collar', 'posters'],
     text: `One rainy afternoon, Miguel found a small brown puppy shivering near the school gate.
-The puppy had no collar and looked very hungry.
-Miguel took off his jacket and wrapped it around the puppy.
-He brought it home and gave it milk and bread.
+The puppy had no collar and looked very hungry and afraid.
+Miguel took off his own jacket and gently wrapped it around the trembling little dog.
 
+He carried it home and gave it warm milk and soft bread.
 His mother smiled when she saw what her son had done.
-"You have a kind heart, Miguel," she said softly.
-They named the puppy Brownie.
+"You have a kind heart, Miguel," she said softly. They named the puppy Brownie.
 
-The next day, Miguel made posters to find the owner.
-A little girl named Lea came running — Brownie was hers.
-Miguel was sad, but he felt good knowing Brownie was safe.`
+The next day, Miguel made posters and put them up all around the neighborhood.
+Soon a little girl named Lea came running — Brownie was hers, lost in the storm.
+Miguel felt sad to say goodbye, but he was happy knowing Brownie was safe at home again.`
   },
   {
     id: 'story-bibingka',
@@ -64,20 +68,18 @@ Miguel was sad, but he felt good knowing Brownie was safe.`
     gradient: 'from-yellow-300 to-amber-500',
     emoji: '🎄',
     tapWords: ['galapong', 'bibingka', 'sangkap'],
-    text: `Tuwing Pasko, nagluluto si Inang ng bibingka para sa pamilya.
-Maaga siyang gigising para ihanda ang mga sangkap.
-May galapong, niyog, itlog, at asukal na nakahandang lahat.
-Tinutulungan siya ng kanyang anak na si Ana sa kusina.
+    text: `Tuwing Pasko, nagluluto si Inang ng mainit na bibingka para sa buong pamilya.
+Maaga siyang gumigising para ihanda ang lahat ng sangkap.
+May galapong, niyog, itlog, at asukal na nakaayos na sa mesa.
+
+Sa kusina, tinutulungan siya ng kanyang anak na si Ana.
 Hinuhugasan ni Ana ang mga dahon ng saging na gagamitin.
-
-"Bakit mahalaga ang dahon ng saging, Inang?" tanong ni Ana.
-
-"Para mas masarap at mabango ang bibingka," sagot ni Inang.
+"Bakit po mahalaga ang dahon ng saging, Inang?" tanong niya.
+"Para mas mabango at masarap ang bibingka," ngiti ng kanyang ina.
 
 Nang maluto na, ibinigay ni Inang ang unang piraso kay Ana.
-Mainit at matamis ang bibingka — paborito ng buong pamilya.
-
-"Ikaw ang pinakamahusay na magluluto, Inang!" sabi ni Ana.`
+Mainit, malambot, at matamis ito — paborito ng buong pamilya.
+"Ikaw po ang pinakamahusay na magluluto sa buong mundo, Inang!" masayang sabi ni Ana.`
   },
   {
     id: 'story-neighbor',
@@ -88,17 +90,17 @@ Mainit at matamis ang bibingka — paborito ng buong pamilya.
     gradient: 'from-pink-300 to-rose-500',
     emoji: '🏡',
     tapWords: ['ladder', 'rescued', 'sidewalk'],
-    text: `Aling Rosa lives next door to our family.
+    text: `Aling Rosa lives right next door to our family.
 Every morning, she sweeps the street in front of her house.
-She also waters the plants along the sidewalk.
+She also waters the plants along the sidewalk so the whole block looks bright and green.
 
-One day, our cat Miming got stuck in a tall tree.
-Aling Rosa brought a ladder without being asked.
-She climbed up carefully and rescued Miming.
-My mother thanked her with a plate of pancit.
+One afternoon, our cat Miming climbed up and got stuck in a tall tree.
+Without even being asked, Aling Rosa brought out her wooden ladder.
+She climbed up very carefully and rescued Miming from the highest branch.
+My mother thanked her warmly with a plate of pancit.
 
-Aling Rosa just laughed and said neighbors should help each other.
-I want to be like Aling Rosa when I grow up — always ready to help without waiting to be asked.`
+Aling Rosa just laughed and said that neighbors should always help each other.
+I want to be like her when I grow up — kind, brave, and always ready to help without being asked.`
   },
   {
     id: 'story-saranggola',
@@ -109,18 +111,17 @@ I want to be like Aling Rosa when I grow up — always ready to help without wai
     gradient: 'from-sky-300 to-blue-600',
     emoji: '🪁',
     tapWords: ['saranggola', 'kawayan', 'liwasan'],
-    text: `Isang maliwanag na Sabado, nagpalipad ng saranggola si Danilo sa liwasan ng kanilang barangay.
-Gawa ng kanyang tatay ang saranggola mula sa kawayan at makulay na papel.
-Mataas nang lumipad ang saranggola nang biglang humigpit ang hangin.
-Naputol ang tali at lumayo ang saranggola.
+    text: `Isang maliwanag na Sabado, nagpalipad si Danilo ng saranggola sa liwasan ng kanilang barangay.
+Gawa ito ng kanyang tatay mula sa magaan na kawayan at makulay na papel.
+Tuwang-tuwa si Danilo habang umaakyat ito nang mataas sa langit.
 
-Tumakbo si Danilo subalit hindi niya maabot ito.
-Natagpuan niya ito sa bubong ng kapitbahay.
-Tinulungan siya ng kapitbahay na makuha ang saranggola.
+Ngunit biglang humigpit ang hangin at naputol ang tali.
+Lumipad nang malayo ang saranggola hanggang sa mapadpad sa bubong ng kapitbahay.
+Tumakbo si Danilo, ngunit hindi niya ito maabot nang mag-isa.
+Mabuti na lang, tinulungan siya ng mabait na kapitbahay na ibaba ito.
 
-"Susunod, gagawa tayo ng mas matagal na tali," sabi ng kanyang tatay habang ngingiti.
-
-Natuto si Danilo na laging maging handa sa mga hindi inaasahang pangyayari.`
+"Susunod, gagawa tayo ng mas matibay at mas mahabang tali," ngiti ng kanyang tatay.
+Natutunan ni Danilo na laging maging handa sa mga hindi inaasahang pangyayari.`
   },
   {
     id: 'story-river',
@@ -131,19 +132,18 @@ Natuto si Danilo na laging maging handa sa mga hindi inaasahang pangyayari.`
     gradient: 'from-cyan-400 to-indigo-600',
     emoji: '🐟',
     tapWords: ['barrio', 'courage', 'classmates'],
-    text: `In a clear river near Barrio Masagana, there lived hundreds of fish of all shapes and colors.
-The fish lived happily because the water was clean and full of food.
+    text: `In a clear river near Barrio Masagana, there lived hundreds of fish of every shape and color.
+They lived happily because the water was clean and full of food.
+Children swam there, and families came to rest along its cool, green banks.
 
-But one day, some people began throwing trash into the river.
-The water slowly turned dark and smelly.
-The fish became sick and many moved away.
+But one day, some people began throwing their trash into the river.
+Little by little, the water turned dark and smelly.
+The fish grew sick, and many of them swam away to find cleaner homes.
 
-A young girl named Lourdes saw what was happening.
-She made posters and convinced her classmates to clean the river every Saturday.
-Slowly, the water became clear again.
-The fish returned and the river was alive once more.
-
-Lourdes learned that one person with courage can make a big difference.`
+A young girl named Lourdes saw what was happening and refused to stay silent.
+She made posters and gathered the courage to ask her classmates for help.
+Every Saturday, they cleaned the river together until the water ran clear once more.
+The fish returned, the river came alive, and Lourdes learned that one person with courage can make a big difference.`
   },
   {
     id: 'story-pusa-aso',
@@ -156,8 +156,11 @@ Lourdes learned that one person with courage can make a big difference.`
     tapWords: ['pusa', 'aso', 'magkaibigan'],
     text: `May isang pusa at isang aso sa bahay ni Lena.
 Ang pusa ay kulay puti. Ang aso ay kulay itim.
+
 Tuwing umaga, naglalaro sila sa bakuran.
-Magkaibigan sila kahit magkaiba ang kanilang hitsura.
+Naghahabulan sila at masayang tumatakbo.
+
+Magkaibigan sila kahit magkaiba ang kulay.
 Masaya si Lena dahil mabait ang kanyang mga alaga.`
   },
   {
@@ -170,10 +173,14 @@ Masaya si Lena dahil mabait ang kanyang mga alaga.`
     emoji: '⚽',
     tapWords: ['ball', 'bounce', 'park'],
     text: `I have a big red ball.
+It is round and bright.
+
 I like to bounce it in the park.
-My little sister plays with me.
+My little sister plays with me there.
 We throw the ball up and down.
-When the sun goes down, we go home happy.`
+
+When the sun goes down, we walk home.
+We are tired but very happy.`
   },
   {
     id: 'story-paaralan',
@@ -184,12 +191,16 @@ When the sun goes down, we go home happy.`
     gradient: 'from-lime-300 to-green-500',
     emoji: '🏫',
     tapWords: ['paaralan', 'guro', 'kaklase'],
-    text: `Tuwing Lunes, masaya si Pepe na pumasok sa paaralan.
+    text: `Tuwing Lunes, masayang-masaya si Pepe na pumasok sa paaralan.
 Mabait ang kanyang guro na si Gng. Cruz.
-Marami siyang kaklase na laging handang tumulong.
+Lagi siyang nginingitian nito tuwing umaga.
+
+Marami siyang kaklase na handang tumulong.
 Natututo sila ng pagbabasa, pagbilang, at pagguhit.
-Sa recess, naglalaro sila ng patintero sa bakuran.
-"Gusto ko ang paaralan namin!" sabi ni Pepe.`
+Tuwing recess, naglalaro sila ng patintero sa bakuran.
+
+"Gusto ko ang aming paaralan!" masayang sabi ni Pepe.
+Para sa kanya, ito ay parang pangalawang tahanan.`
   },
   {
     id: 'story-vendor',
@@ -200,12 +211,16 @@ Sa recess, naglalaro sila ng patintero sa bakuran.
     gradient: 'from-orange-300 to-amber-500',
     emoji: '🍢',
     tapWords: ['vendor', 'banana', 'grateful'],
-    text: `Aling Nena sells banana cue near the school.
-One day, a small boy had no money for a snack.
-He looked at the warm banana cue and felt sad.
-Aling Nena smiled and gave him one for free.
-"Eat well so you can study hard," she said.
-The boy was grateful and promised to do his best.`
+    text: `Aling Nena sells warm banana cue near the school gate.
+Many children buy her sweet snacks after class.
+
+One day, a small boy stood quietly by her cart.
+He had no money, and he looked at the banana cue with sad eyes.
+Aling Nena smiled and handed him one for free.
+"Eat well so you can study hard," she said kindly.
+
+The boy was very grateful for her kindness.
+He promised himself to always do his best in school.`
   },
   {
     id: 'story-pinya',
@@ -216,18 +231,19 @@ The boy was grateful and promised to do his best.`
     gradient: 'from-yellow-400 to-amber-600',
     emoji: '🍍',
     tapWords: ['alamat', 'tamad', 'pinya', 'pagsisisi'],
-    text: `Noong unang panahon, may isang batang babae na si Pina na lubhang tamad.
-Hindi niya hinahanap ang mga bagay na gusto ng kanyang ina.
-"Saan ang sandok?" tanong ng ina. "Hindi ko alam!" sagot ni Pina nang hindi man lang humahanap.
+    text: `Noong unang panahon, may isang batang babae na nagngangalang Pina na lubhang tamad.
+Ayaw niyang gumawa ng kahit anong gawaing-bahay.
+Kapag inuutusan siya ng kanyang ina, palagi siyang nagdadahilan.
 
+"Pina, saan ang sandok?" tanong ng ina isang araw.
+"Hindi ko po alam!" sagot niya nang hindi man lang tumitingin.
 Isang araw, nagkasakit ang ina at si Pina ang inutusang magluto.
-Ngunit dahil sa katamaran, hindi niya mahanap ang mga kagamitan.
-Sa galit, nasabi ng ina, "Sana magkaroon ka ng maraming mata para makakita ka!"
+Ngunit dahil sa katamaran, hindi niya mahanap ang anumang kagamitan.
+Sa inis at pagod, napabulalas ang ina, "Sana magkaroon ka ng maraming mata para makakita ka!"
 
-Bigla na lang nawala si Pina.
-Makalipas ang ilang araw, may tumubong bagong halaman sa bakuran —
-hugis-ulo, dilaw, at puno ng "mga mata."
-Tinawag itong pinya bilang ala-ala kay Pina at sa aral ng pagsisikap.`
+Kinabukasan, bigla na lamang nawala si Pina.
+Sa bakuran, may tumubong kakaibang halaman — hugis-ulo, dilaw, at puno ng parang mga mata.
+Tinawag itong pinya, isang ala-ala kay Pina at sa aral ng pagsisisi sa katamaran.`
   },
   {
     id: 'story-inventor',
@@ -239,14 +255,15 @@ Tinawag itong pinya bilang ala-ala kay Pina at sa aral ng pagsisikap.`
     emoji: '💡',
     tapWords: ['inventor', 'brownouts', 'prototype', 'persevered'],
     text: `In a small town that suffered from frequent brownouts, a girl named Trisha grew tired of studying by candlelight.
-She wondered if there was a better way to keep a lamp glowing without electricity.
+Night after night, she wondered if there was a better way to keep a lamp glowing without electricity.
 
-After reading about solar power in an old science book, she began collecting broken gadgets.
-Her first prototype failed. So did the second and the third.
-Her classmates laughed, but Trisha persevered, adjusting the small solar panel each time.
+One afternoon, she read about solar power in an old science book and felt a spark of hope.
+She began collecting broken gadgets and bits of wire from around the neighborhood.
+Her first prototype failed. So did the second, and the third.
+Her classmates laughed at her, but Trisha persevered, adjusting the small solar panel and trying again.
 
-Finally, one evening, her little lamp flickered to life — powered only by sunlight stored during the day.
-Soon, neighbors asked her to build lamps for their homes too.
+Finally, one quiet evening, her little lamp flickered to life — powered only by sunlight saved during the day.
+Word spread quickly, and soon neighbors were asking her to build lamps for their homes too.
 Trisha realized that curiosity and patience could light up an entire community.`
   },
   {
@@ -260,7 +277,10 @@ Trisha realized that curiosity and patience could light up an entire community.`
     tapWords: ['pamilya', 'kapatid', 'magulang'],
     text: `Ako ay may masayang pamilya.
 May nanay, tatay, at dalawang kapatid ako.
+
 Tuwing gabi, magkakasama kami sa hapag-kainan.
+Nagkukuwentuhan kami habang kumakain.
+
 Mahal ko ang aking mga magulang.
 Masaya ako dahil lagi kaming magkakasama.`
   },
@@ -275,7 +295,10 @@ Masaya ako dahil lagi kaming magkakasama.`
     tapWords: ['sun', 'morning', 'shines'],
     text: `Every morning, the sun rises in the sky.
 It shines bright and warm.
+
 The birds sing a happy song.
+The flowers open to say hello.
+
 Children wake up and get ready for school.
 The sun makes everyone feel happy.`
   },
@@ -289,9 +312,12 @@ The sun makes everyone feel happy.`
     emoji: '🦆',
     tapWords: ['bibe', 'sapa', 'lumalangoy'],
     text: `May maliit na bibe sa malinaw na sapa.
-Dilaw ang kanyang balahibo.
+Dilaw ang kanyang malambot na balahibo.
+
 Buong araw siyang lumalangoy.
-"Kwak! Kwak!" masayang sigaw niya.
+"Kwak! Kwak!" masaya niyang sigaw.
+
+Marami siyang kaibigang isda sa tubig.
 Maganda ang buhay sa malinis na sapa.`
   },
   {
@@ -304,10 +330,14 @@ Maganda ang buhay sa malinis na sapa.`
     emoji: '🐃',
     tapWords: ['kalabaw', 'bukid', 'nag-aararo'],
     text: `Si Bok ay isang malakas na kalabaw.
-Tumutulong siya kay Mang Tonyo sa bukid.
-Tuwing umaga, nag-aararo sila ng lupa.
-Pagkatapos magtrabaho, naliligo si Bok sa putik.
-"Salamat, Bok," sabi ni Mang Tonyo. "Ikaw ang aking kaibigan."`
+Araw-araw, tumutulong siya kay Mang Tonyo sa bukid.
+
+Tuwing umaga, magkasama silang nag-aararo ng lupa.
+Hindi sumusuko si Bok kahit mainit ang araw.
+Pagkatapos magtrabaho, masaya siyang naliligo sa malamig na putik.
+
+"Salamat, Bok," sabi ni Mang Tonyo habang hinahaplos ito.
+"Ikaw ang aking tapat na kaibigan."`
   },
   {
     id: 'story-lola-garden',
@@ -320,9 +350,13 @@ Pagkatapos magtrabaho, naliligo si Bok sa putik.
     tapWords: ['garden', 'flowers', 'watered'],
     text: `My lola has a beautiful garden behind her house.
 She grows yellow flowers and green vegetables.
-Every afternoon, I help her pull the weeds.
-We watered the plants together with a small pail.
-"Plants grow well when we care for them," Lola said with a smile.`
+
+Every afternoon, I help her pull out the weeds.
+Together, we watered the plants with a small pail.
+We listen to the birds singing while we work.
+
+"Plants grow well when we care for them," Lola said with a smile.
+I love spending quiet afternoons in her garden.`
   },
   {
     id: 'story-sapatos',
@@ -333,11 +367,15 @@ We watered the plants together with a small pail.
     gradient: 'from-rose-300 to-red-500',
     emoji: '👟',
     tapWords: ['sapatos', 'regalo', 'masaya'],
-    text: `Natanggap ni Lito ang isang regalo mula sa kanyang ninang.
+    text: `Isang araw, may dumating na regalo para kay Lito mula sa kanyang ninang.
+Binuksan niya ito nang dahan-dahan.
+
 Isang bagong sapatos na kulay asul!
-Matagal na niyang gustong magkaroon nito.
-Isinuot niya agad ito at tumakbo sa labas.
-"Salamat po, Ninang!" masayang sabi ni Lito.`
+Matagal na niyang gustong magkaroon ng ganito.
+Isinuot niya agad ito at tumakbo sa labas para ipakita sa mga kaibigan.
+
+"Salamat po, Ninang!" masayang sabi ni Lito.
+Pinangako niyang aalagaan niya ito nang maigi.`
   },
   {
     id: 'story-firefly',
@@ -349,11 +387,16 @@ Isinuot niya agad ito at tumakbo sa labas.
     emoji: '✨',
     tapWords: ['firefly', 'darkness', 'glow'],
     text: `In a quiet forest lived a tiny firefly named Kislap.
-The other fireflies teased him because his glow was very small.
-One night, a little frog got lost in the darkness and began to cry.
-Kislap flew close and lit the path with his small but steady glow.
-He led the frog safely back to the pond.
-From that night on, the others learned that even a small light can help in the dark.`
+The other fireflies often teased him because his glow was very small.
+Kislap felt sad, but he never stopped shining.
+
+One dark night, a little frog got lost and began to cry in the darkness.
+None of the bigger fireflies seemed to notice him.
+But Kislap flew close and lit the path with his small but steady glow.
+Slowly and carefully, he led the frog all the way back to the pond.
+
+From that night on, the other fireflies looked at Kislap differently.
+They learned that even the smallest light can help in the dark.`
   },
   {
     id: 'story-mangingisda',
@@ -364,12 +407,17 @@ From that night on, the others learned that even a small light can help in the d
     gradient: 'from-blue-400 to-indigo-600',
     emoji: '🎣',
     tapWords: ['mangingisda', 'bangka', 'alon'],
-    text: `Si Mang Kardo ay isang mangingisda sa isang maliit na baryo sa tabing-dagat.
-Bago pa sumikat ang araw, naglalayag na siya sa kanyang bangka.
-Isang umaga, lumakas ang hangin at tumaas ang mga alon.
-Nahirapan siyang bumalik sa pampang, ngunit hindi siya sumuko.
-Sa tulong ng kanyang karanasan, ligtas siyang nakarating sa dalampasigan.
-Natutunan ng kanyang anak na ang tiyaga at lakas ng loob ay mahalaga sa buhay.`
+    text: `Si Mang Kardo ay isang masipag na mangingisda sa isang maliit na baryo sa tabing-dagat.
+Bago pa sumikat ang araw, naglalayag na siya sakay ng kanyang lumang bangka.
+Kasama niya ang kanyang anak na nag-aaral pa lamang mangisda.
+
+Isang umaga, biglang lumakas ang hangin at tumaas ang mga alon.
+Umuga ang bangka at halos hindi na makita ang dalampasigan.
+Nahirapan si Mang Kardo, ngunit hindi siya nagpadala sa takot.
+Sa tulong ng kanyang karanasan at lakas ng loob, ligtas silang nakabalik sa pampang.
+
+Niyakap siya ng kanyang anak pagkababa sa bangka.
+Natutunan nito na ang tiyaga at tapang ay mahahalaga sa buhay.`
   },
   {
     id: 'story-lighthouse',
@@ -380,12 +428,17 @@ Natutunan ng kanyang anak na ang tiyaga at lakas ng loob ay mahalaga sa buhay.`
     gradient: 'from-slate-400 to-cyan-600',
     emoji: '🗼',
     tapWords: ['lighthouse', 'storm', 'guided'],
-    text: `Old Mang Berto lived alone in a tall lighthouse by the sea.
-Every night, he climbed the steps to light the great lamp.
-One stormy evening, a fishing boat lost its way in the heavy rain.
-The waves were huge and the sailors were frightened.
-But the bright beam from the lighthouse guided them safely to shore.
-The grateful fishermen thanked Mang Berto, whose faithful work saved their lives.`
+    text: `Old Mang Berto lived alone in a tall lighthouse beside the sea.
+Every night, he climbed the long, winding steps to light the great lamp.
+He had done this faithfully for many, many years.
+
+One stormy evening, a small fishing boat lost its way in the heavy rain.
+The waves rose like mountains, and the frightened sailors could not see the shore.
+Then, through the darkness, the bright beam of the lighthouse appeared.
+It guided the little boat safely, inch by inch, back to land.
+
+The grateful fishermen hurried up to thank Mang Berto.
+His quiet, faithful work had saved their lives that night.`
   },
   {
     id: 'story-liham',
@@ -396,12 +449,16 @@ The grateful fishermen thanked Mang Berto, whose faithful work saved their lives
     gradient: 'from-pink-400 to-rose-600',
     emoji: '✉️',
     tapWords: ['liham', 'nangungulila', 'pag-asa'],
-    text: `Ang nanay ni Mia ay nagtatrabaho sa malayong bansa.
-Tuwing gabi, nangungulila si Mia sa kanyang ina.
-Isang araw, nagpasya siyang sumulat ng liham.
-Isinulat niya ang lahat ng kanyang nararamdaman at mga pangarap.
-Nang matanggap ito ng kanyang nanay, napaiyak ito sa tuwa.
-Ang simpleng liham ay nagbigay ng pag-asa sa kanilang dalawa.`
+    text: `Ang nanay ni Mia ay nagtatrabaho sa isang malayong bansa.
+Bihira lang silang magkita, kaya tuwing gabi ay nangungulila si Mia sa kanyang ina.
+Madalas niyang tinitingnan ang kanilang lumang larawan bago matulog.
+
+Isang araw, nagpasya si Mia na sumulat ng isang liham.
+Isinulat niya rito ang lahat ng kanyang nararamdaman, mga pangarap, at pananabik.
+Maingat niyang itinago ito hanggang sa maipadala sa kanyang nanay.
+
+Nang matanggap at mabasa ito ng kanyang ina, napaiyak ito sa tuwa.
+Ang simpleng liham na iyon ay nagbigay ng bagong pag-asa sa kanilang dalawa.`
   },
   {
     id: 'story-robot',
@@ -412,12 +469,17 @@ Ang simpleng liham ay nagbigay ng pag-asa sa kanilang dalawa.`
     gradient: 'from-teal-400 to-emerald-600',
     emoji: '🤖',
     tapWords: ['recycled', 'gears', 'contraption'],
-    text: `Rosa loved to collect old bottles, cans, and broken toys.
-Her friends thought it was just junk, but Rosa saw treasure.
+    text: `Rosa loved to collect old bottles, rusty cans, and broken toys.
+Her friends thought it was all just junk, but Rosa saw hidden treasure.
+She kept her finds in a big box under her bed.
+
 One weekend, she decided to build a robot from her recycled materials.
-She connected the gears, taped the cans, and painted the body bright blue.
-When she switched it on, the little contraption rolled across the floor.
-Rosa proved that creativity can turn trash into something wonderful.`
+She connected the little gears, taped the cans together, and painted the body bright blue.
+It took her many tries before everything fit just right.
+
+When she finally switched it on, the funny contraption rolled across the floor.
+Rosa clapped with joy and her friends cheered.
+She had proven that creativity can turn trash into something wonderful.`
   },
   {
     id: 'story-mayon',
@@ -428,11 +490,15 @@ Rosa proved that creativity can turn trash into something wonderful.`
     gradient: 'from-orange-400 to-red-600',
     emoji: '🌋',
     tapWords: ['alamat', 'prinsesa', 'bulkan'],
-    text: `Noong unang panahon, may magandang prinsesa na nagngangalang Daragang Magayon.
-Marami ang humahanga sa kanyang kagandahan, ngunit iisa lamang ang kanyang minahal — si Panganoron.
-Ipinagbawal ng kanyang ama ang kanilang pag-iibigan.
-Sa kalungkutan, naghiwalay ang magkasintahan sa isang trahedya.
-Inilibing sila nang magkasama, at sa paglipas ng panahon, tumubo ang isang malaking bundok sa lugar na iyon.
+    text: `Noong unang panahon, may isang magandang prinsesa na nagngangalang Daragang Magayon.
+Marami ang humahanga sa kanyang kagandahan, ngunit iisa lamang ang kanyang minahal — ang matapang na si Panganoron.
+
+Lihim silang nagmahalan, ngunit nang malaman ito ng ama ng prinsesa, ipinagbawal niya ang kanilang pag-iibigan.
+Sa kabila ng lahat, nanatiling tapat ang dalawa sa isa't isa.
+Subalit isang malungkot na pangyayari ang naghiwalay sa kanila magpakailanman.
+
+Inilibing silang magkasama bilang tanda ng kanilang pag-ibig.
+Sa paglipas ng panahon, tumubo ang isang malaking bulkan sa lugar na iyon.
 Tinawag itong Mayon, mula sa pangalang Magayon, bilang ala-ala sa kanilang walang hanggang pag-ibig.`
   },
   {
@@ -444,12 +510,17 @@ Tinawag itong Mayon, mula sa pangalang Magayon, bilang ala-ala sa kanilang walan
     gradient: 'from-emerald-500 to-green-800',
     emoji: '🌳',
     tapWords: ['balete', 'legend', 'courage'],
-    text: `In the middle of the village stood an ancient balete tree.
-The elders said it was haunted, so no child dared to go near it.
-But young Andoy was curious and tired of the scary stories.
-One bright afternoon, he gathered his courage and walked toward the tree.
-Beneath its roots, he found only a family of friendly kittens and a hidden spring of clean water.
-Andoy taught the village that fear often comes from things we do not understand.`
+    text: `In the middle of the village stood an ancient balete tree, its roots twisting deep into the ground.
+The elders said it was haunted, so no child ever dared to go near it.
+For years, the scary legend kept everyone away.
+
+But young Andoy was curious and tired of being afraid.
+One bright afternoon, he gathered all his courage and walked slowly toward the old tree.
+His heart pounded, but he kept going, step by careful step.
+
+Beneath its tangled roots, he found no ghosts at all —
+only a family of friendly kittens and a hidden spring of clean, cool water.
+Andoy ran to tell the others, teaching the whole village that fear often comes from things we simply do not understand.`
   },
   {
     id: 'story-kuwintas',
@@ -460,12 +531,17 @@ Andoy taught the village that fear often comes from things we do not understand.
     gradient: 'from-violet-400 to-purple-600',
     emoji: '📿',
     tapWords: ['mahiwagang', 'kuwintas', 'kabutihan'],
-    text: `May isang mahirap na batang lalaki na nakakita ng mahiwagang kuwintas sa gubat.
-Sinasabing tumutupad ito ng kahit anong hiling.
-Maaari sana niyang hilingin ang yaman o kapangyarihan.
-Ngunit hiniling niya na sana ay gumaling ang maysakit niyang kapatid.
-Kinaumagahan, gumaling nga ang kanyang kapatid.
-Natutunan niya na ang tunay na kayamanan ay ang kabutihan ng puso.`
+    text: `May isang mahirap na batang lalaki na isang araw ay nakakita ng mahiwagang kuwintas sa gubat.
+Kumikislap ito nang kakaiba sa ilalim ng mga dahon.
+Sinasabing tumutupad ang kuwintas na ito ng kahit anong hiling.
+
+Naisip ng bata ang lahat ng maaari niyang hilingin.
+Maaari sana niyang hilingin ang ginto, yaman, o kapangyarihan.
+Ngunit naalala niya ang kanyang maysakit na kapatid sa bahay.
+Kaya taimtim niyang hiniling na sana ay gumaling ito.
+
+Kinaumagahan, gising na ang kanyang kapatid — malusog at masaya.
+Natutunan ng bata na ang tunay na kayamanan ay nasa kabutihan ng puso.`
   },
   {
     id: 'story-kalikasan',
@@ -477,11 +553,16 @@ Natutunan niya na ang tunay na kayamanan ay ang kabutihan ng puso.`
     emoji: '🌏',
     tapWords: ['kalikasan', 'kampanya', 'pagbabago'],
     text: `Si Liwayway ay isang mag-aaral na labis na nagmamalasakit sa kalikasan.
-Napansin niyang lumalala ang basura sa kanilang ilog at nawawala ang mga puno sa kabundukan.
-Sa halip na manatiling tahimik, nagsimula siya ng isang kampanya sa kanilang paaralan.
+Napansin niyang dumarami ang basura sa kanilang ilog at unti-unting nawawala ang mga puno sa kabundukan.
+Nabagabag siya tuwing nakikita ang dating malinis na lugar na nagiging marumi.
+
+Sa halip na manatiling tahimik, nagpasya siyang kumilos.
+Nagsimula siya ng isang kampanya sa kanilang paaralan upang gisingin ang loob ng iba.
 Nagtanim sila ng mga puno, naglinis ng ilog, at nagturo tungkol sa wastong pagtatapon ng basura.
-Unti-unti, sumama ang buong komunidad sa kanyang adhikain.
-Pinatunayan ni Liwayway na kahit isang bata ay kayang magsimula ng tunay na pagbabago.`
+
+Unti-unti, dumami ang sumama sa kanyang adhikain — mga kaklase, guro, at maging ang buong komunidad.
+Muling luminis ang ilog at nanariwa ang kapaligiran.
+Pinatunayan ni Liwayway na kahit isang batang determinado ay kayang magsimula ng tunay na pagbabago.`
   },
   {
     id: 'story-mountain-village',
@@ -492,12 +573,16 @@ Pinatunayan ni Liwayway na kahit isang bata ay kayang magsimula ng tunay na pagb
     gradient: 'from-indigo-500 to-slate-700',
     emoji: '⛰️',
     tapWords: ['village', 'ambition', 'scholarship'],
-    text: `Far up in the mountains, in a village with no electricity, lived a determined girl named Maya.
-Every day she walked two hours to reach the nearest school, carrying her books and her ambition.
-Some neighbors said girls from the mountains would never amount to much.
-But Maya studied by candlelight and never missed a single class.
-Years later, she earned a scholarship to a university in the city.
-She returned home not to leave the village behind, but to build the first school on the mountain.`
+    text: `Far up in the mountains, in a small village with no electricity, lived a determined girl named Maya.
+Every single day, she walked two hours each way to reach the nearest school, carrying her books and her ambition.
+
+Some neighbors shook their heads and said girls from the mountains would never amount to much.
+But Maya refused to listen to their doubts.
+She studied by candlelight every night and never missed a single class, no matter how hard the rain fell.
+
+Years of hard work finally paid off, and Maya earned a scholarship to a university in the city.
+Yet she never forgot where she came from.
+She returned home not to leave the village behind, but to build the very first school on the mountain.`
   },
   {
     id: 'story-makina',
@@ -508,11 +593,16 @@ She returned home not to leave the village behind, but to build the first school
     gradient: 'from-amber-500 to-orange-700',
     emoji: '⚙️',
     tapWords: ['makina', 'imbensyon', 'pagtitiyaga'],
-    text: `Ang lolo ni Emman ay isang dating inhinyero na puno ng mga ideya.
-Sa kanilang munting kamalig, may lumang makina siyang tinatangkang ayusin nang maraming taon.
+    text: `Ang lolo ni Emman ay isang dating inhinyero na puno pa rin ng mga pangarap at ideya.
+Sa kanilang munting kamalig, may lumang makina siyang sinisikap ayusin sa loob ng maraming taon.
 Marami ang nagsabing sayang lang ang kanyang oras at pagod.
-Ngunit araw-araw, may itinuturo si Lolo kay Emman tungkol sa siyensya at pagtitiyaga.
-Isang araw, sa wakas ay umandar ang makina — isang imbensyong nagbibigay ng kuryente mula sa tubig.
+
+Ngunit hindi sumuko si Lolo.
+Araw-araw, may itinuturo siya kay Emman tungkol sa siyensya, mga gulong, at lalo na ang pagtitiyaga.
+Magkasama silang nagtatrabaho hanggang gabi, paikot-ikot sa lumang makina.
+
+Isang araw, sa wakas, umandar ang makina —
+isang imbensyong nakakagawa ng kuryente mula lamang sa umaagos na tubig.
 Natutunan ni Emman na ang matiyagang pangarap ay maaaring maging katotohanan.`
   }
 ];
@@ -539,20 +629,32 @@ export async function seedDatabase(db) {
   try {
     const storiesRef = collection(db, 'stories');
     const existing = await getDocs(storiesRef);
+    const firstSeed = existing.size === 0;
 
-    // If partial seed (fewer stories than expected), wipe and re-seed
-    if (existing.size > 0 && existing.size < STORIES.length) {
-      for (const d of existing.docs) {
-        await deleteDoc(doc(db, 'stories', d.id));
-      }
-    } else if (existing.size >= STORIES.length) {
-      return; // Already fully seeded
+    // Read the version that's currently seeded into this database.
+    let seededVersion = 0;
+    try {
+      const metaSnap = await getDoc(doc(db, 'meta', 'seed'));
+      if (metaSnap.exists()) seededVersion = metaSnap.data().version || 0;
+    } catch {}
+
+    // Up to date: all seed stories present and content version matches.
+    if (!firstSeed && existing.size >= STORIES.length && seededVersion >= SEED_VERSION) {
+      return;
     }
 
-    // Stories
+    // Upsert seed stories by their stable ids. setDoc overwrites the seed docs
+    // with the latest text but never deletes teacher-created stories (those have
+    // a `createdBy` field and ids that aren't in STORIES).
     for (const s of STORIES) {
       await setDoc(doc(db, 'stories', s.id), { ...s, createdAt: Timestamp.now() });
     }
+    await setDoc(doc(db, 'meta', 'seed'), { version: SEED_VERSION, updatedAt: Timestamp.now() });
+
+    // Demo users, roster, and sessions only need to be created once (first seed).
+    // On a content-only version bump, the stories above are refreshed and we stop
+    // here so we don't duplicate demo sessions via addDoc.
+    if (!firstSeed) return;
 
     // Demo student
     await setDoc(doc(db, 'users', 'demo-student-001'), {
