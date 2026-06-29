@@ -42,7 +42,7 @@ export default function Signup() {
   const role = ROLE_CONFIG[rawRole] ? rawRole : 'student';
   const cfg = ROLE_CONFIG[role];
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup, updateProfile } = useAuth();
 
   const [form, setForm] = useState({
     displayName: '',
@@ -74,7 +74,11 @@ export default function Signup() {
     return match ? { uid: match.id, ...match.data() } : null;
   }
 
-  function buildProfile(child, section) {
+  // Base profile written at account creation. Linkage fields (the parent's
+  // childId, the student's section) are applied afterwards via updateProfile,
+  // because resolving them needs an authenticated read that only works once the
+  // account exists.
+  function buildBaseProfile() {
     if (role === 'student') {
       const level = Number(form.gradeLevel) || 1;
       return {
@@ -83,9 +87,9 @@ export default function Signup() {
         schoolName: form.schoolName.trim(),
         gradeLevel: level,
         currentLevel: level,
-        sectionId: section?.id || null,
-        sectionIds: section ? [section.id] : [],
-        teacherId: section?.teacherId || null,
+        sectionId: null,
+        sectionIds: [],
+        teacherId: null,
         hasCompletedDiagnostic: false
       };
     }
@@ -97,12 +101,10 @@ export default function Signup() {
         className: form.className.trim()
       };
     }
-    // parent
+    // parent — childId/childName are linked after signup
     return {
       role: 'parent',
-      displayName: form.displayName.trim(),
-      childId: child.uid,
-      childName: child.displayName || 'Anak'
+      displayName: form.displayName.trim()
     };
   }
 
@@ -113,27 +115,42 @@ export default function Signup() {
       setErr('Hindi pa naaabot ng password ang lahat ng kinakailangan sa ibaba.');
       return;
     }
+    if (role === 'parent' && !FIREBASE_ENABLED) {
+      setErr('Kailangan ng Firebase para i-link ang account ng anak. (Tingnan ang SETUP.md)');
+      return;
+    }
     setLoading(true);
     try {
-      let child = null;
-      let section = null;
-      if (role === 'parent') {
-        if (!FIREBASE_ENABLED) {
-          throw new Error('Kailangan ng Firebase para i-link ang account ng anak. (Tingnan ang SETUP.md)');
-        }
-        child = await findStudentByEmail(form.childEmail);
-        if (!child) {
-          throw new Error('Walang nahanap na estudyante para sa email na iyon. Pakitiyak na rehistrado na ang anak.');
-        }
-      }
+      const email = form.email.trim().toLowerCase();
+      // Create the account FIRST. Firestore rules require a signed-in user, so
+      // any lookup must happen after this — querying earlier fails with
+      // "Missing or insufficient permissions".
+      await signup(email, form.password, buildBaseProfile());
+
+      // Now authenticated: resolve and link the section (student) or child (parent).
       if (role === 'student' && form.sectionCode.trim()) {
-        section = await findSectionByCode(form.sectionCode);
+        const section = await findSectionByCode(form.sectionCode);
         if (!section) {
-          throw new Error('Walang nahanap na section para sa code na iyon. Pakisuri sa iyong guro.');
+          throw new Error(
+            'Nagawa na ang iyong account, ngunit walang section para sa code na iyon. Maaari kang sumali mamaya mula sa iyong dashboard.'
+          );
         }
+        updateProfile({
+          sectionId: section.id,
+          sectionIds: [section.id],
+          teacherId: section.teacherId || null
+        });
       }
-      await signup(form.email.trim().toLowerCase(), form.password, buildProfile(child, section));
-      setDone(form.email.trim().toLowerCase());
+      if (role === 'parent') {
+        const child = await findStudentByEmail(form.childEmail);
+        if (!child) {
+          throw new Error(
+            'Nagawa na ang iyong account, ngunit walang nahanap na estudyante para sa email na iyon. Pakitiyak na rehistrado na ang anak.'
+          );
+        }
+        updateProfile({ childId: child.uid, childName: child.displayName || 'Anak' });
+      }
+      setDone(email);
     } catch (e2) {
       setErr(e2.message || 'May problema sa pagrehistro.');
     } finally {

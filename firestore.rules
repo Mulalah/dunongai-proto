@@ -31,14 +31,12 @@ service cloud.firestore {
     }
 
     // A user can read/write their own profile.
-    // Teachers can read students in their sections; parents read their linked child.
+    // Any signed-in user may read profiles — this is required so a parent can
+    // resolve their child by email and a student can resolve a section's teacher
+    // during signup (a brand-new account isn't yet linked to anyone, so a
+    // narrower per-doc rule would reject those lookup queries outright).
     match /users/{uid} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == uid ||
-        resource.data.teacherId == request.auth.uid ||
-        userData(request.auth.uid).childId == uid ||
-        isTeacher()
-      );
+      allow read: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == uid;
       allow update, delete: if isSignedIn() && request.auth.uid == uid;
     }
