@@ -98,10 +98,12 @@ export default function Progress() {
   }, [profile]);
 
   const level = profile?.currentLevel || 3;
+  const streak = profile?.streakDays ?? 0;
+  const totalStars = sessions.reduce((sum, s) => sum + (s.stars || 0), 0);
   const unlockedIds = computeUnlockedBadges({
     sessions,
     currentLevel: level,
-    streakDays: profile?.streakDays ?? 0
+    streakDays: streak
   });
   const initials = (profile?.displayName || 'JC')
     .split(' ')
@@ -135,13 +137,13 @@ export default function Progress() {
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
-                  <Icon name="flame" size={15} className="text-gold" /> 5 Araw
+                  <Icon name="flame" size={15} className="text-gold" /> {streak} Araw
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
-                  <Icon name="star" size={15} className="text-gold" /> 24 Bituin
+                  <Icon name="star" size={15} className="text-gold" /> {totalStars} Bituin
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-sm">
-                  <Icon name="bookOpen" size={15} className="text-teal-200" /> {sessions.length || 8} Kwento
+                  <Icon name="bookOpen" size={15} className="text-teal-200" /> {sessions.length} Kwento
                 </span>
               </div>
             </div>
