@@ -188,7 +188,7 @@ export default function StoryLibrary() {
   }, [stories, filter, search]);
 
   const level = profile?.currentLevel || 3;
-  const streak = profile?.streakDays ?? 5;
+  const streak = profile?.streakDays ?? 0;
 
   // New students must join a section first — no stories shown until then.
   if (profile && joinedIds.length === 0) {

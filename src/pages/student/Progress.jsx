@@ -101,7 +101,7 @@ export default function Progress() {
   const unlockedIds = computeUnlockedBadges({
     sessions,
     currentLevel: level,
-    streakDays: profile?.streakDays ?? 5
+    streakDays: profile?.streakDays ?? 0
   });
   const initials = (profile?.displayName || 'JC')
     .split(' ')

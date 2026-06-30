@@ -16,7 +16,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const level = profile?.currentLevel || 3;
-  const streak = profile?.streakDays ?? 5;
+  const streak = profile?.streakDays ?? 0;
   const initials = (profile?.displayName || 'JC')
     .split(' ')
     .map((s) => s[0])
